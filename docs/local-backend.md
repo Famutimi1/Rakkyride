@@ -17,6 +17,8 @@ Use `/login` with an existing active `admin` or `super_admin` account. During th
 
 The dashboard server reads HttpOnly cookies and forwards Bearer authentication to Express. Browser JavaScript never receives JWTs. POST/PATCH routes check the exact dashboard Origin. Mobile keeps its existing app token flow. `mobile/src/services/api.ts` maps localhost to the reachable Metro LAN host or Android emulator address when needed. Both API and Socket.io use the same configured backend address.
 
+Staff can also use the Google button on `/login`; its backend handler is `/api/auth/google/staff`. It verifies the browser-bound challenge and an existing staff identity before issuing the same cookie session. The current OAuth client needs the local origin authorized in Google Cloud Console. See [Google sign-in setup](google-sign-in.md).
+
 ## Page connections
 
 All API paths below have the backend prefix `/api/admin`:

@@ -33,9 +33,12 @@ export default async function Login({
           <span className="eyebrow">WELCOME BACK</span>
           <h2>Sign in to your workspace</h2>
           <p className="muted">
-            Use the phone number linked to your staff account.
+            Sign in with your staff phone number or Google account.
           </p>
-          <LoginForm reason={reason} />
+          <LoginForm
+            reason={reason}
+            googleClientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+          />
           {previewEnabled() && (
             <Link className="text-link" href="/admin">
               Open development preview →

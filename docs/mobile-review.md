@@ -10,6 +10,8 @@ This layout review temporarily used fictional development preview records. `DASH
 
 ## Earlier responsive review
 
+Google login follow-up: the official Google button was checked on the login page at 320px, 390px and desktop width. The login panel now constrains its grid column so Google's iframe cannot force page overflow. Document widths matched 320/390px, with button containers 272/342px. Screenshots: `screenshots/google-login-desktop.png` and `screenshots/google-login-mobile.png`. Google's configured client still rejects the local origin; see `google-sign-in.md` for the required Console setting. No real-account Google login was attempted.
+
 All 21 navigation pages and nine reachable detail/creation pages were opened individually at 390×844 and 320×740. For every page, document width matched viewport width and no main content extended outside the viewport. Measurements are saved in `mobile-review.json`; screenshots are in `screenshots/mobile`.
 
 Main pages: Overview, Live operations, All trips, Scheduled rides, Courier deliveries, Riders & customers, Drivers, Applications, Payments, Wallets & ledger, Withdrawals, Reconciliation, Support cases, Safety incidents, Ratings & feedback, Reports, Pricing, Payment settings, Audit log, Service health, Team access.

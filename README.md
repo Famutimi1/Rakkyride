@@ -18,6 +18,7 @@ The shared backend should run on port 4000 using its existing PostgreSQL and Red
 ## Configuration
 
 - `RAKKY_API_URL`: server-side address of the existing backend.
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: public web OAuth client ID matching backend `GOOGLE_CLIENT_ID_WEB`. Authorize the dashboard origin in Google Cloud Console. See [Google staff sign-in setup](docs/google-sign-in.md).
 - `DASHBOARD_ORIGIN`: exact dashboard origin for session and mutation CSRF checks; use HTTPS in production.
 - `RAKKY_ENVIRONMENT`: expected operator label. The protected layout reads the backend’s configured provider key mode and application environment, and marks a label mismatch. This is configuration evidence, not a provider availability check.
 - `NEXT_PUBLIC_GOOGLE_MAPS_JS_KEY`: browser-restricted key with Maps JavaScript API enabled. Use `NEXT_PUBLIC_GOOGLE_MAP_ID` for the fleet map.

@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { cookieNames, isStaff, upstream } from "@/lib/server";
 function result(body: object, status = 200) {
@@ -32,14 +33,40 @@ export async function POST(
   if (!origin || request.headers.get("origin") !== origin)
     return result({ error: "Request origin denied." }, 403);
   const { action } = await params;
-  if (!["initiate", "verify", "refresh", "logout"].includes(action))
+  if (
+    ![
+      "initiate",
+      "verify",
+      "refresh",
+      "logout",
+      "google-challenge",
+      "google",
+    ].includes(action)
+  )
     return result({ error: "Not found." }, 404);
   const jar = await cookies();
   const clear = () => {
     jar.delete(cookieNames.access);
     jar.delete(cookieNames.refresh);
+    jar.delete(cookieNames.googleNonce);
   };
   try {
+    if (action === "google-challenge") {
+      if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)
+        return result(
+          { error: "Google sign-in is not configured. Use your phone number." },
+          503,
+        );
+      const nonce = randomBytes(32).toString("base64url");
+      jar.set(cookieNames.googleNonce, nonce, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+        maxAge: 600,
+      });
+      return result({ nonce });
+    }
     if (action === "logout") {
       const access = jar.get(cookieNames.access)?.value,
         refresh = jar.get(cookieNames.refresh)?.value;
@@ -56,10 +83,23 @@ export async function POST(
       return result({ success: true });
     }
     const input: unknown = action === "refresh" ? {} : await request.json();
-    if (!input || typeof input !== "object")
+    if (!input || typeof input !== "object" || Array.isArray(input))
       return result({ error: "Invalid request." }, 400);
     let body: object;
-    if (action === "refresh") {
+    if (action === "google") {
+      const idToken = "idToken" in input ? input.idToken : null;
+      const expectedNonce = jar.get(cookieNames.googleNonce)?.value;
+      jar.delete(cookieNames.googleNonce);
+      if (!expectedNonce || !/^[A-Za-z0-9_-]{43}$/.test(expectedNonce))
+        return result({ error: "Restart Google sign-in and try again." }, 400);
+      if (
+        typeof idToken !== "string" ||
+        idToken.length < 20 ||
+        idToken.length > 12000
+      )
+        return result({ error: "Invalid Google sign-in response." }, 400);
+      body = { idToken, expectedNonce };
+    } else if (action === "refresh") {
       const refreshToken = jar.get(cookieNames.refresh)?.value;
       if (!refreshToken) {
         clear();
@@ -82,7 +122,11 @@ export async function POST(
       body = action === "verify" ? { phone, code } : { phone };
     }
     const response = await upstream(
-      action === "refresh" ? "auth/refresh" : `auth/login/${action}`,
+      action === "google"
+        ? "auth/google/staff"
+        : action === "refresh"
+          ? "auth/refresh"
+          : `auth/login/${action}`,
       { method: "POST", body: JSON.stringify(body) },
     );
     if (!response.ok) {
@@ -90,11 +134,13 @@ export async function POST(
       return result(
         {
           error:
-            response.status === 429
-              ? "Too many attempts. Wait before trying again."
-              : response.status >= 500
-                ? "The sign-in service is unavailable."
-                : "Sign-in could not be completed. Check your details or request a new code.",
+            action === "google" && response.status === 403
+              ? "Use the Google account linked to your staff profile. Ask the owner if you need access."
+              : response.status === 429
+                ? "Too many attempts. Wait before trying again."
+                : response.status >= 500
+                  ? "The sign-in service is unavailable."
+                  : "Sign-in could not be completed. Check your details or request a new code.",
         },
         response.status,
       );

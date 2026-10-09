@@ -11,6 +11,7 @@ async function body(req: IncomingMessage) {
   return raw ? (JSON.parse(raw) as Record<string, string>) : {};
 }
 const directoryRequests: string[] = [];
+let receivedGoogleNonce = "";
 const mock = createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json");
   if (req.url === "/api/auth/login/initiate") {
@@ -23,6 +24,27 @@ const mock = createServer(async (req, res) => {
       JSON.stringify({
         tokens: {
           accessToken: data.code === "111111" ? "staff-test" : "user-test",
+          refreshToken: "refresh-test",
+        },
+      }),
+    );
+    return;
+  }
+  if (req.url === "/api/auth/google/staff") {
+    const data = await body(req);
+    receivedGoogleNonce = data.expectedNonce;
+    if (data.idToken === "google-invalid-test-credential") {
+      res.statusCode = 401;
+      res.end("{}");
+      return;
+    }
+    res.end(
+      JSON.stringify({
+        tokens: {
+          accessToken:
+            data.idToken === "google-staff-test-credential"
+              ? "staff-test"
+              : "user-test",
           refreshToken: "refresh-test",
         },
       }),
@@ -169,6 +191,7 @@ const child = spawn(
       DASHBOARD_ORIGIN: base,
       DASHBOARD_PREVIEW: "true",
       RAKKY_API_URL: `http://127.0.0.1:${(mock.address() as AddressInfo).port}`,
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: "session-test.apps.googleusercontent.com",
     },
     stdio: "pipe",
   },
@@ -302,8 +325,79 @@ try {
       .getSetCookie()
       .every((cookie) => /Expires=Thu, 01 Jan 1970/i.test(cookie)),
   );
+  assert.equal(
+    (await post("google-challenge", {}, "https://other.invalid")).status,
+    403,
+  );
+  assert.equal(
+    (await post("google", { idToken: "google-staff-test-credential" })).status,
+    400,
+    "Google requires a browser-bound challenge",
+  );
+  const googleChallenge = await post("google-challenge", {});
+  assert.equal(googleChallenge.status, 200);
+  const nonce = ((await googleChallenge.json()) as { nonce: string }).nonce;
+  assert.match(nonce, /^[A-Za-z0-9_-]{43}$/);
+  const nonceCookie = googleChallenge.headers.getSetCookie()[0];
+  assert.match(nonceCookie, /HttpOnly/i);
+  assert.match(nonceCookie, /Secure/i);
+  assert.match(nonceCookie, /SameSite=strict/i);
+  assert.match(nonceCookie, /Max-Age=600/i);
+  const challengeHeader = nonceCookie.split(";")[0];
+  const googleSession = await post(
+    "google",
+    {
+      idToken: "google-staff-test-credential",
+      expectedNonce: "client-tampering-ignored",
+    },
+    base,
+    challengeHeader,
+  );
+  assert.equal(googleSession.status, 200, await googleSession.clone().text());
+  assert.equal(
+    receivedGoogleNonce,
+    nonce,
+    "only HttpOnly cookie supplies backend expected nonce",
+  );
+  const googleCookies = googleSession.headers.getSetCookie();
+  assert.ok(
+    googleCookies.some(
+      (cookie) =>
+        cookie.startsWith("__Host-rakky-google-nonce=") &&
+        /Expires=Thu, 01 Jan 1970/i.test(cookie),
+    ),
+  );
+  assert.ok(
+    googleCookies
+      .filter((cookie) => !cookie.startsWith("__Host-rakky-google-nonce="))
+      .every((cookie) => /HttpOnly/i.test(cookie) && /Secure/i.test(cookie)),
+  );
+  assert.equal((await googleSession.text()).includes("staff-test"), false);
+  assert.equal(
+    (
+      await post(
+        "google",
+        { idToken: "google-user-test-credential" },
+        base,
+        challengeHeader,
+      )
+    ).status,
+    403,
+    "nonstaff Google cannot establish a staff cookie",
+  );
+  assert.equal(
+    (
+      await post(
+        "google",
+        { idToken: "google-invalid-test-credential" },
+        base,
+        challengeHeader,
+      )
+    ).status,
+    401,
+  );
   console.log(
-    "PASS: production fixture isolation, route guard, CSRF rejection, nonstaff rejection, secure cookies, token redaction, refresh, logout, body-only authenticated record search, server-rendered API pagination and filtered query forwarding.",
+    "PASS: production fixture isolation, route guard, CSRF rejection, nonstaff rejection, secure cookies, token redaction, refresh, logout, body-only authenticated record search, server-rendered API pagination, filtered query forwarding and Google browser challenge/staff session checks.",
   );
 } finally {
   child.kill("SIGTERM");

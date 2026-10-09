@@ -5,6 +5,10 @@ export const previewEnabled = () =>
   process.env.NODE_ENV === "development" &&
   process.env.DASHBOARD_PREVIEW === "true";
 export const cookieNames = {
+  googleNonce:
+    process.env.NODE_ENV === "production"
+      ? "__Host-rakky-google-nonce"
+      : "rakky-google-nonce",
   access:
     process.env.NODE_ENV === "production"
       ? "__Host-rakky-access"

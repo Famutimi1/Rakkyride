@@ -1166,11 +1166,14 @@ tbody tr:hover {
 }
 .login-panel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   place-items: center;
   padding: 48px;
 }
 .login-panel > div {
   width: 100%;
+  min-width: 0;
   max-width: 380px;
 }
 .login-panel h2 {
@@ -1194,10 +1197,43 @@ tbody tr:hover {
   font-size: 14px;
   font-weight: 600;
 }
-.login-form .fine-print {
+.login-methods .fine-print {
   font-size: 13px;
   line-height: 1.8;
   color: var(--textMuted);
+}
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 22px 0;
+  color: var(--textMuted);
+  font-size: 13px;
+}
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.google-sign-in {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.google-sign-in-button {
+  width: 100%;
+  min-width: 0;
+}
+.google-sign-in-button[hidden] {
+  display: none;
+}
+.google-sign-in-button[inert] {
+  opacity: 0.6;
+}
+.login-methods > .fine-print {
+  margin-top: 28px;
 }
 .form-error {
   font-size: 14px;
