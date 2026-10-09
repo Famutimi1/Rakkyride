@@ -1,0 +1,428 @@
+[
+  {
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin",
+    "scroll": 320,
+    "title": "Operations overview",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–3 of 3 tripsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/live",
+    "scroll": 320,
+    "title": "Live operations",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–6 of 6 tripsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/trips",
+    "scroll": 320,
+    "title": "All trips",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–1 of 1 tripsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/scheduled",
+    "scroll": 320,
+    "title": "Scheduled rides",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–2 of 2 tripsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/courier",
+    "scroll": 320,
+    "title": "Courier deliveries",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–5 of 5 usersRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/riders",
+    "scroll": 320,
+    "title": "Riders & customers",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–3 of 3 driversRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/drivers",
+    "scroll": 320,
+    "title": "Drivers",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–1 of 1 applicationsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/applications",
+    "scroll": 320,
+    "title": "Driver applications",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–3 of 3 paymentsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/payments",
+    "scroll": 320,
+    "title": "Payments",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–3 of 3 accountsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/ledger",
+    "scroll": 320,
+    "title": "Wallets & ledger",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–2 of 2 withdrawalsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/withdrawals",
+    "scroll": 320,
+    "title": "Withdrawals",
+    "width": 320
+  },
+  {
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin/reconciliation",
+    "scroll": 320,
+    "title": "Reconciliation",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 0–0 of 0 casesRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/support",
+    "scroll": 320,
+    "title": "Support cases",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 0–0 of 0 casesRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/safety",
+    "scroll": 320,
+    "title": "Safety incidents",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 0–0 of 0 ratingsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/ratings",
+    "scroll": 320,
+    "title": "Ratings & feedback",
+    "width": 320
+  },
+  {
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin/reports",
+    "scroll": 320,
+    "title": "Reports",
+    "width": 320
+  },
+  {
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 0–0 of 0 recordsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/pricing",
+    "scroll": 320,
+    "title": "Pricing",
+    "width": 320
+  },
+  {
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin/settings/payments",
+    "scroll": 320,
+    "title": "Payment settings",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin/audit",
+    "scroll": 320,
+    "title": "Audit log",
+    "width": 320
+  },
+  {
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–7 of 7 recordsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/health",
+    "scroll": 320,
+    "title": "Service health",
+    "width": 320
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin/team",
+    "scroll": 320,
+    "title": "Team access",
+    "width": 320
+  },
+  {
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin",
+    "scroll": 390,
+    "title": "Operations overview",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–3 of 3 tripsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/live",
+    "scroll": 390,
+    "title": "Live operations",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–6 of 6 tripsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/trips",
+    "scroll": 390,
+    "title": "All trips",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–1 of 1 tripsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/scheduled",
+    "scroll": 390,
+    "title": "Scheduled rides",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–2 of 2 tripsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/courier",
+    "scroll": 390,
+    "title": "Courier deliveries",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–5 of 5 usersRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/riders",
+    "scroll": 390,
+    "title": "Riders & customers",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–3 of 3 driversRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/drivers",
+    "scroll": 390,
+    "title": "Drivers",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–1 of 1 applicationsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/applications",
+    "scroll": 390,
+    "title": "Driver applications",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–3 of 3 paymentsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/payments",
+    "scroll": 390,
+    "title": "Payments",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–3 of 3 accountsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/ledger",
+    "scroll": 390,
+    "title": "Wallets & ledger",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–2 of 2 withdrawalsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/withdrawals",
+    "scroll": 390,
+    "title": "Withdrawals",
+    "width": 390
+  },
+  {
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin/reconciliation",
+    "scroll": 390,
+    "title": "Reconciliation",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 0–0 of 0 casesRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/support",
+    "scroll": 390,
+    "title": "Support cases",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 0–0 of 0 casesRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/safety",
+    "scroll": 390,
+    "title": "Safety incidents",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 0–0 of 0 ratingsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/ratings",
+    "scroll": 390,
+    "title": "Ratings & feedback",
+    "width": 390
+  },
+  {
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin/reports",
+    "scroll": 390,
+    "title": "Reports",
+    "width": 390
+  },
+  {
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 0–0 of 0 recordsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/pricing",
+    "scroll": 390,
+    "title": "Pricing",
+    "width": 390
+  },
+  {
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin/settings/payments",
+    "scroll": 390,
+    "title": "Payment settings",
+    "width": 390
+  },
+  {
+    "filterOpen": "false",
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin/audit",
+    "scroll": 390,
+    "title": "Audit log",
+    "width": 390
+  },
+  {
+    "filterOverflow": false,
+    "paginations": [
+      "Showing 1–7 of 7 recordsRows20PreviousPage 1 of 1Next"
+    ],
+    "path": "/admin/health",
+    "scroll": 390,
+    "title": "Service health",
+    "width": 390
+  },
+  {
+    "filterOpen": "true",
+    "filterOverflow": false,
+    "paginations": [],
+    "path": "/admin/team",
+    "scroll": 390,
+    "title": "Team access",
+    "width": 390
+  }
+]

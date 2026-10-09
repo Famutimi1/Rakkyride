@@ -1,3 +1,4 @@
+import { pageSlice, paginationInput } from "@/lib/pagination";
 import { Button, LinkButton } from "@/components/ui/button";
 import { FilterForm, FormField } from "@/components/ui/filter-toolbar";
 import { FinanceFilters } from "@/components/finance-filters";
@@ -53,6 +54,9 @@ type Search = Record<string, string | string[] | undefined>;
 function queryString(params: Search, extras: Record<string, string> = {}) {
   const result = new URLSearchParams();
   for (const key of [
+    "page",
+    "limit",
+    "mode",
     "status",
     "service",
     "cursor",
@@ -90,14 +94,56 @@ async function records<T>(
   samples: T[],
   preview: boolean,
 ): Promise<PageResult<T>> {
-  return preview
-    ? {
-        items: samples,
-        nextCursor: null,
-        asOf: fixtures.fixtureAsOf,
-        scope: { dateBasis: "fixture" },
-      }
-    : adminRead<PageResult<T>>(path);
+  const [endpoint, query = ""] = path.split("?");
+  const params = new URLSearchParams(query);
+  if (!params.has("cursor")) {
+    params.set("page", params.get("page") ?? "1");
+    params.set("limit", params.get("limit") ?? "20");
+  }
+  if (!preview) return adminRead<PageResult<T>>(`${endpoint}?${params}`);
+  if (endpoint === "trips")
+    return {
+      items: samples,
+      nextCursor: null,
+      asOf: fixtures.fixtureAsOf,
+      scope: { dateBasis: "fixture" },
+    };
+  const filtered = samples.filter((item) => {
+    const record = item as Record<string, unknown>;
+    const keys = ["id", "target", "reference", "kind", "userId", "ownerUserId"];
+    if (!["users", "drivers", "driver-applications"].includes(endpoint))
+      keys.push("status");
+    if (
+      !keys.every(
+        (key) => !params.get(key) || String(record[key]) === params.get(key),
+      )
+    )
+      return false;
+    const at = Date.parse(String(record.createdAt ?? ""));
+    if (params.get("from") && !(at >= Date.parse(params.get("from")!)))
+      return false;
+    if (params.get("to") && !(at < Date.parse(params.get("to")!))) return false;
+    const amount = String(record.amountKobo ?? "0");
+    if (
+      params.get("minKobo") &&
+      BigInt(amount) < BigInt(params.get("minKobo")!)
+    )
+      return false;
+    if (
+      params.get("maxKobo") &&
+      BigInt(amount) > BigInt(params.get("maxKobo")!)
+    )
+      return false;
+    return true;
+  });
+  const sliced = pageSlice(filtered, params.get("page"), params.get("limit"));
+  return {
+    ...sliced,
+    nextCursor: null,
+    asOf: fixtures.fixtureAsOf,
+    scope: { dateBasis: "fixture" },
+    count: { value: filtered.length, exact: true },
+  };
 }
 async function RenderAdminPage({
   params,
@@ -111,6 +157,21 @@ async function RenderAdminPage({
   const section = segments[0] ?? "overview";
   const id = segments[1];
   const preview = previewEnabled();
+  try {
+    if (Array.isArray(search.page) || Array.isArray(search.limit))
+      throw new RangeError("Repeated pagination fields");
+    if (
+      search.page !== undefined &&
+      (search.cursor !== undefined || search.before !== undefined)
+    )
+      throw new RangeError("Mixed pagination modes");
+    paginationInput(
+      typeof search.page === "string" ? search.page : undefined,
+      typeof search.limit === "string" ? search.limit : undefined,
+    );
+  } catch {
+    throw new InvalidStaffQuery("Invalid pagination");
+  }
   if (segments.length > 2) notFound();
   if (id && ["payments", "withdrawals", "reconciliation"].includes(section))
     return await ExtendedPage({ section, id, search, preview });
@@ -179,6 +240,7 @@ async function RenderAdminPage({
       balanceKobo: string;
       frozen: boolean;
       nextEntryId?: string | null;
+      pagination?: import("@/contracts/admin").PaginationInfo;
       entries: {
         id: string;
         transactionId: string;
@@ -201,7 +263,7 @@ async function RenderAdminPage({
           entries: [],
         } as Account)
       : await adminRead<Account>(
-          `accounts/${encodeURIComponent(id)}${typeof search.before === "string" ? `?before=${encodeURIComponent(search.before)}` : ""}`,
+          `accounts/${encodeURIComponent(id)}?${new URLSearchParams(typeof search.before === "string" ? { before: search.before } : { page: typeof search.page === "string" ? search.page : "1", limit: typeof search.limit === "string" ? search.limit : "20" })}`,
         );
     return (
       <>
@@ -232,6 +294,8 @@ async function RenderAdminPage({
                   ? `/admin/ledger/${id}?before=${account.nextEntryId}`
                   : undefined
               }
+              pagination={account.pagination}
+              noun="postings"
               rows={account.entries.map((e) => [
                 <Link
                   className="record-link"
@@ -793,6 +857,7 @@ async function RenderAdminPage({
             showFilters={false}
             trips={history.items}
             nextCursor={history.nextCursor}
+            pagination={history.pagination}
           />
         </Panel>
       </>
@@ -1098,6 +1163,7 @@ async function RenderAdminPage({
           preview={preview}
           trips={data.items}
           nextCursor={data.nextCursor}
+          pagination={data.pagination}
           mode={
             section === "trips"
               ? "all"
@@ -1118,8 +1184,9 @@ async function RenderAdminPage({
               (typeof search.status === "string" ? search.status : "pending") ||
             search.status === "") &&
           (!search.id ||
-            p.id.toLowerCase().includes(String(search.id).toLowerCase())) &&
-          (!search.status || p.driver?.status === search.status),
+            p.id.toLowerCase() === String(search.id).toLowerCase()) &&
+          (!search.status || p.driver?.status === search.status) &&
+          (!search.mode || p.active === (search.mode === "active")),
       );
     const path =
       section === "riders"
@@ -1172,6 +1239,14 @@ async function RenderAdminPage({
         <DirectoryTable
           rowKeys={data.items.map((person) => person.id)}
           preview={preview}
+          pagination={data.pagination}
+          noun={
+            section === "applications"
+              ? "applications"
+              : section === "drivers"
+                ? "drivers"
+                : "users"
+          }
           nextHref={nextLink(`/admin/${section}`, search, data.nextCursor)}
           headers={[
             "Name / ID",
@@ -1236,6 +1311,8 @@ async function RenderAdminPage({
         <FinanceFilters kind="payments" preview={preview} />
         <DirectoryTable
           preview={preview}
+          pagination={data.pagination}
+          noun="payments"
           nextHref={nextLink("/admin/payments", search, data.nextCursor)}
           headers={[
             "Reference",
@@ -1282,6 +1359,8 @@ async function RenderAdminPage({
         <FinanceFilters kind="withdrawals" preview={preview} />
         <DirectoryTable
           preview={preview}
+          pagination={data.pagination}
+          noun="withdrawals"
           nextHref={nextLink("/admin/withdrawals", search, data.nextCursor)}
           headers={[
             "Reference / Driver",
@@ -1334,6 +1413,8 @@ async function RenderAdminPage({
         <FinanceFilters kind="ledger" preview={preview} />
         <DirectoryTable
           preview={preview}
+          pagination={data.pagination}
+          noun="accounts"
           nextHref={nextLink("/admin/ledger", search, data.nextCursor)}
           headers={[
             "Owner / Account",
@@ -1540,11 +1621,23 @@ async function RenderAdminPage({
       }[];
       coverage: string;
       nextCursor: string | null;
+      pagination?: import("@/contracts/admin").PaginationInfo;
     };
     const qs = new URLSearchParams();
-    for (const key of ["before", "action", "objectId", "actorId"])
+    for (const key of [
+      "page",
+      "limit",
+      "before",
+      "action",
+      "objectId",
+      "actorId",
+    ])
       if (typeof search[key] === "string" && search[key])
         qs.set(key, search[key] as string);
+    if (!qs.has("before")) {
+      qs.set("page", qs.get("page") ?? "1");
+      qs.set("limit", qs.get("limit") ?? "20");
+    }
     const data = preview ? null : await adminRead<Audit>(`audit?${qs}`);
     return (
       <>
@@ -1587,6 +1680,7 @@ async function RenderAdminPage({
           <DirectoryTable
             preview={false}
             rowKeys={data.items.map((row) => row.id)}
+            pagination={data.pagination}
             nextHref={
               data.nextCursor
                 ? `/admin/audit?${new URLSearchParams({ ...Object.fromEntries(qs), before: data.nextCursor })}`

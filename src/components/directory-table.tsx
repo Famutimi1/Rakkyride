@@ -1,41 +1,23 @@
 import { Fragment, type ReactNode } from "react";
-import { DataTable } from "./ui/data-table";
-import { Pagination } from "./ui/pagination";
-export function DirectoryTable({
-  headers,
-  rows,
-  nextHref,
-  preview,
-  rowKeys,
-}: {
+import type { PaginationInfo } from "@/contracts/admin";
+import { DirectoryTableClient } from "./directory-table-client";
+
+// Key cells before server serialization; the client owns page navigation.
+export function DirectoryTable(props: {
   headers: string[];
   rows: ReactNode[][];
   nextHref?: string;
   preview: boolean;
   rowKeys?: readonly (string | number)[];
+  pagination?: PaginationInfo;
+  noun?: string;
 }) {
   return (
-    <div className="directory">
-      <DataTable
-        columns={headers.map((label, index) => ({ id: String(index), label }))}
-        rows={rows.map((cells, index) => ({
-          id: rowKeys?.[index] ?? index,
-          cells: cells.map((cell, column) => (
-            <Fragment key={column}>{cell}</Fragment>
-          )),
-        }))}
-      />
-      <div className="table-footer">
-        <span>
-          {rows.length} {preview ? "sample " : ""}
-          {rows.length === 1 ? "record" : "records"}
-          {preview ? "" : " on this page"}
-        </span>
-        <span>
-          {preview ? "Development fixtures" : "Authorized staff snapshot"}
-        </span>
-      </div>
-      <Pagination nextHref={nextHref} />
-    </div>
+    <DirectoryTableClient
+      {...props}
+      rows={props.rows.map((row) =>
+        row.map((cell, column) => <Fragment key={column}>{cell}</Fragment>),
+      )}
+    />
   );
 }

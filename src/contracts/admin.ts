@@ -23,11 +23,22 @@ export interface Scope {
   to?: string;
 }
 export interface PageResult<T> {
+  pagination?: PaginationInfo;
   items: T[];
   nextCursor: string | null;
   asOf: string;
   scope: Scope;
   count?: { value: number; exact: boolean };
+}
+export interface PaginationInfo {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  from: number;
+  to: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
 }
 export interface TripPosition {
   location: { latitude: number; longitude: number; at: string } | null;
@@ -140,6 +151,7 @@ export interface PaymentIntent {
 }
 export interface Withdrawal {
   id: string;
+  userId?: string;
   driver: string;
   amountKobo: Kobo;
   feeKobo: Kobo;
@@ -152,6 +164,7 @@ export interface Withdrawal {
 }
 export interface LedgerAccount {
   id: string;
+  ownerUserId?: string;
   owner: string;
   kind: "wallet" | "earnings" | "system";
   balanceKobo: Kobo;

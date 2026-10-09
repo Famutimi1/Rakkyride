@@ -17,3 +17,15 @@ Additional integrated filters:
 - Audit: action, exact audited object UUID, optional API actor UUID and descending immutable audit-ID pagination. Safety exclusion applies even when explicitly filtering for a safety action. Changing a filter clears pagination; next-page links retain it.
 
 Backend tests verify authorization, secret/contact masking, literal wildcard handling, query-bound pagination, group limits, rate limiting, audit privacy, team pagination/role filters and audit safety restrictions. Production session smoke verifies JSON-body forwarding, cookie use, no-store, origin rejection, missing-session rejection and GET search rejection without contacting real auth or payment services.
+
+## Numbered directory pagination
+
+The dashboard requests `page=1&limit=20` by default. Rows choices are 10/20/50/100; the API accepts integers 1–100 and positive pages up to 999999. All directory filters apply before counting and paging. Changing a filter or row size resets page 1; Previous/Next retain filters. Exact ID/reference filters remain URL-safe; staff-wide name/contact search remains POST-only.
+
+Supported reads: users, drivers, applications, trips (including live/scheduled/courier modes and linked people history), payment intents, withdrawals, accounts, support, safety, ratings, team, audit, account postings, and reconciliation exception queues. Existing role/auth checks and masked projections apply to both count and rows. Team/safety remain super_admin-only. Safety-related audit entries are excluded from ordinary-admin totals as well as results.
+
+Numbered responses include `pagination: {page, pageSize, total, totalPages, from, to, hasPrevious, hasNext}`. An empty result uses page 1 of 1 and range 0–0; a page beyond the filtered last page clamps to that last page. The matching count and rows use one read-only repeatable-read PostgreSQL transaction with five-second statement timeouts and stable ordering, including ID tie-breaks. Counts reflect each request’s snapshot; concurrent changes can change totals between requests. Unavailable counts return an error rather than invented totals.
+
+Omitting `page` retains existing cursor/before requests and their previous default size. Numbered `page` cannot be combined with `cursor` or `before`; invalid/repeated page fields and oversized limits return 400. Care activity and grouped staff search retain their separate cursor contract; aggregate reports and bounded context arrays are not complete directory exports.
+
+Integration tests exercise non-overlapping pages, tied timestamps, filtered totals, empty/out-of-range pages, disabled account filters, posting pages, team/safety authorization, audit count restrictions and invalid inputs in disposable PostgreSQL schemas. The production Next session smoke verifies query forwarding and renders the API range/total (21–40 of 108, page 2 of 6) through authenticated server-side reads against a local stub.

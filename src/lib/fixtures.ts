@@ -286,6 +286,7 @@ export const intents: PaymentIntent[] = [
 export const withdrawals: Withdrawal[] = [
   {
     id: "demo-wd-01",
+    userId: "demo-driver-001",
     driver: "Chidi Eze",
     amountKobo: "2400000",
     feeKobo: "5000",
@@ -298,6 +299,7 @@ export const withdrawals: Withdrawal[] = [
   },
   {
     id: "demo-wd-02",
+    userId: "demo-driver-002",
     driver: "Bisi Adebayo",
     amountKobo: "1800000",
     feeKobo: "5000",
@@ -312,6 +314,7 @@ export const withdrawals: Withdrawal[] = [
 export const accounts: LedgerAccount[] = [
   {
     id: "demo-account-1",
+    ownerUserId: "demo-user-001",
     owner: "Ada Okafor",
     kind: "wallet",
     balanceKobo: "360000",
@@ -320,6 +323,7 @@ export const accounts: LedgerAccount[] = [
   },
   {
     id: "demo-account-2",
+    ownerUserId: "demo-driver-001",
     owner: "Chidi Eze",
     kind: "earnings",
     balanceKobo: "2875000",
@@ -328,6 +332,7 @@ export const accounts: LedgerAccount[] = [
   },
   {
     id: "demo-account-3",
+    ownerUserId: "demo-driver-002",
     owner: "Bisi Adebayo",
     kind: "earnings",
     balanceKobo: "-150000",

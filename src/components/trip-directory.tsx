@@ -1,10 +1,13 @@
 "use client";
+import { SearchFilterBar } from "./ui/search-filter-bar";
+import { paginationInfo } from "@/lib/pagination";
+import type { PaginationInfo } from "@/contracts/admin";
 import { Button } from "./ui/button";
-import { FilterForm, FormField, FilterToolbar } from "./ui/filter-toolbar";
+import { FormField } from "./ui/filter-toolbar";
 import { Dropdown } from "./ui/dropdown";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { tripStatuses, type Trip } from "@/contracts/admin";
 import { statusLabel } from "@/lib/format";
 import { useUiStore } from "@/lib/ui-store";
@@ -16,12 +19,14 @@ export function TripDirectory({
   trips,
   preview,
   nextCursor = null,
+  pagination,
   mode = "all",
   showFilters = true,
 }: {
   trips: Trip[];
   preview: boolean;
   nextCursor?: string | null;
+  pagination?: PaginationInfo;
   showFilters?: boolean;
   mode?: "all" | "live" | "scheduled" | "courier";
 }) {
@@ -34,14 +39,26 @@ export function TripDirectory({
   const [query, setQuery] = useState(params.get("id") ?? "");
   const dense = useUiStore((s) => s.dense),
     setDense = useUiStore((s) => s.setDense);
+  const [pending, startTransition] = useTransition();
+  const idQuery = params.get("id") ?? "";
+  useEffect(() => setQuery(idQuery), [idQuery]);
+  function dateOf(trip: Trip) {
+    if (params.get("dateBasis") === "scheduled") return trip.scheduledAt;
+    if (params.get("dateBasis") === "fulfilled")
+      return trip.timeline.find((event) =>
+        ["completed", "returned"].includes(event.status),
+      )?.at;
+    return trip.requestedAt;
+  }
   function filter(name: string, value: string) {
     const next = new URLSearchParams(params.toString());
     next.delete("cursor");
+    next.set("page", "1");
     if (value) next.set(name, value);
     else next.delete(name);
     router.replace(`${pathname}?${next}`, { scroll: false });
   }
-  const rows = preview
+  const allRows = preview
     ? trips
         .filter(
           (t) =>
@@ -65,7 +82,18 @@ export function TripDirectory({
               ].includes(t.status)) &&
             (!status || t.status === status) &&
             (!service || t.service === service) &&
-            (!query || t.id.toLowerCase().includes(query.toLowerCase())),
+            (!idQuery || t.id === idQuery) &&
+            (!params.get("riderId") || t.riderId === params.get("riderId")) &&
+            (!params.get("driverId") ||
+              t.driverId === params.get("driverId")) &&
+            (!params.get("paymentMethod") ||
+              t.paymentMethod === params.get("paymentMethod")) &&
+            (!params.get("paymentStatus") ||
+              t.paymentStatus === params.get("paymentStatus")) &&
+            (!params.get("from") ||
+              Date.parse(dateOf(t) ?? "") >= Date.parse(params.get("from")!)) &&
+            (!params.get("to") ||
+              Date.parse(dateOf(t) ?? "") < Date.parse(params.get("to")!)),
         )
         .sort(
           (a, b) =>
@@ -84,159 +112,172 @@ export function TripDirectory({
             ) || a.id.localeCompare(b.id)),
         )
     : trips;
+  const meta =
+    preview && showFilters
+      ? paginationInfo(
+          allRows.length,
+          Number(params.get("page") ?? 1),
+          Number(params.get("limit") ?? 20),
+        )
+      : pagination;
+  const rows =
+    preview && meta
+      ? allRows.slice((meta.page - 1) * meta.pageSize, meta.to)
+      : allRows;
+  function navigate(page: number, size = meta?.pageSize ?? 20) {
+    const next = new URLSearchParams(params.toString());
+    next.delete("cursor");
+    next.set("page", String(page));
+    next.set("limit", String(size));
+    startTransition(() =>
+      router.push(`${pathname}?${next}`, { scroll: false }),
+    );
+  }
   return (
     <div className="directory">
       {showFilters && (
-        <FilterToolbar label="Trip filters">
-          <SearchField
-            label="Find a trip by exact ID"
-            placeholder="Find a trip ID…"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onSearch={(value) => {
-              if (!preview) filter("id", value);
-            }}
-            onClear={() => {
-              setQuery("");
-              if (!preview) filter("id", "");
-            }}
-          />
-          <Dropdown
-            aria-label="Trip status"
-            value={status}
-            onValueChange={(value) => filter("status", value)}
-          >
-            <option value="">All statuses</option>
-            {tripStatuses.map((s) => (
-              <option key={s} value={s}>
-                {statusLabel(s, mode === "courier" ? "courier" : undefined)}
-              </option>
-            ))}
-          </Dropdown>
-          {mode !== "courier" && (
+        <SearchFilterBar
+          resetKey={params.toString()}
+          aria-label="Trip filters"
+          search={
+            <SearchField
+              label="Find a trip by exact ID"
+              name="id"
+              placeholder="Search by trip ID…"
+              pattern={preview ? undefined : "[0-9a-fA-F-]{36}"}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          }
+          onClear={() => {
+            setQuery("");
+            const next = new URLSearchParams();
+            for (const key of ["view", "limit"])
+              if (params.get(key)) next.set(key, params.get(key)!);
+            next.set("page", "1");
+            router.replace(`${pathname}?${next}`, { scroll: false });
+          }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            const next = new URLSearchParams(params.toString());
+            next.delete("cursor");
+            next.set("page", "1");
+            for (const [name, entry] of new FormData(event.currentTarget)) {
+              let text = String(entry).trim();
+              if (text && ["from", "to"].includes(name))
+                text = `${text}T00:00:00+01:00`;
+              if (text) next.set(name, text);
+              else next.delete(name);
+            }
+            startTransition(() =>
+              router.replace(`${pathname}?${next}`, { scroll: false }),
+            );
+          }}
+        >
+          <FormField label="Trip status">
             <Dropdown
-              aria-label="Service"
-              value={service}
-              onValueChange={(value) => filter("service", value)}
-            >
-              <option value="">All services</option>
-              <option value="ride">Passenger</option>
-              <option value="courier">Courier</option>
-            </Dropdown>
+              aria-label="Trip status"
+              name="status"
+              defaultValue={status}
+              options={[
+                { value: "", label: "All statuses" },
+                ...tripStatuses.map((value) => ({
+                  value,
+                  label: statusLabel(
+                    value,
+                    mode === "courier" ? "courier" : undefined,
+                  ),
+                })),
+              ]}
+            />
+          </FormField>
+          {mode !== "courier" && (
+            <FormField label="Service">
+              <Dropdown
+                aria-label="Service"
+                name="service"
+                defaultValue={service}
+                options={[
+                  { value: "", label: "All services" },
+                  { value: "ride", label: "Passenger" },
+                  { value: "courier", label: "Courier" },
+                ]}
+              />
+            </FormField>
           )}
-          <Button
-            type="submit"
-            variant="secondary"
-            onClick={() => setDense(!dense)}
-          >
+          <FormField>
+            Date basis
+            <Dropdown
+              aria-label="Date basis"
+              name="dateBasis"
+              defaultValue={params.get("dateBasis") ?? "requested"}
+            >
+              <option value="requested">Requested</option>
+              <option value="scheduled">Scheduled pickup</option>
+              <option value="fulfilled">Completed / returned</option>
+            </Dropdown>
+          </FormField>
+          <FormField>
+            From · WAT
+            <input
+              type="date"
+              name="from"
+              defaultValue={params.get("from")?.slice(0, 10) ?? ""}
+            />
+          </FormField>
+          <FormField>
+            To · WAT (exclusive)
+            <input
+              type="date"
+              name="to"
+              defaultValue={params.get("to")?.slice(0, 10) ?? ""}
+            />
+          </FormField>
+          <FormField>
+            Payment method
+            <Dropdown
+              aria-label="Payment method"
+              name="paymentMethod"
+              defaultValue={params.get("paymentMethod") ?? ""}
+            >
+              <option value="">All</option>
+              <option value="cash">Cash</option>
+              <option value="wallet">Wallet</option>
+            </Dropdown>
+          </FormField>
+          <FormField>
+            Payment state
+            <Dropdown
+              aria-label="Payment state"
+              name="paymentStatus"
+              defaultValue={params.get("paymentStatus") ?? ""}
+            >
+              <option value="">All</option>
+              {["unpaid", "held", "settled", "released"].map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </Dropdown>
+          </FormField>
+          <FormField>
+            Rider UUID
+            <input
+              name="riderId"
+              defaultValue={params.get("riderId") ?? ""}
+              pattern={preview ? undefined : "[0-9a-fA-F-]{36}"}
+            />
+          </FormField>
+          <FormField>
+            Driver UUID
+            <input
+              name="driverId"
+              defaultValue={params.get("driverId") ?? ""}
+              pattern={preview ? undefined : "[0-9a-fA-F-]{36}"}
+            />
+          </FormField>
+          <Button onClick={() => setDense(!dense)}>
             {dense ? "Comfortable" : "Compact"} rows
           </Button>
-          {(status || service || query) && (
-            <button
-              className="text-link"
-              onClick={() => {
-                setQuery("");
-                router.replace(pathname);
-              }}
-            >
-              Clear filters
-            </button>
-          )}
-        </FilterToolbar>
-      )}
-      {showFilters && !preview && (
-        <details className="advanced-filters">
-          <summary>More filters · date, payment, rider, driver</summary>
-          <FilterForm
-            onSubmit={(event) => {
-              event.preventDefault();
-              const next = new URLSearchParams(params.toString());
-              next.delete("cursor");
-              for (const [key, entry] of new FormData(event.currentTarget)) {
-                const value = String(entry);
-                if (value) next.set(key, value);
-                else next.delete(key);
-              }
-              router.replace(`${pathname}?${next}`, { scroll: false });
-            }}
-          >
-            <FormField>
-              Date basis
-              <Dropdown
-                aria-label="Date basis"
-                name="dateBasis"
-                defaultValue={params.get("dateBasis") ?? "requested"}
-              >
-                <option value="requested">Requested</option>
-                <option value="scheduled">Scheduled pickup</option>
-                <option value="fulfilled">Completed / returned</option>
-              </Dropdown>
-            </FormField>
-            <FormField>
-              From · WAT
-              <input
-                type="date"
-                name="from"
-                defaultValue={params.get("from")?.slice(0, 10) ?? ""}
-              />
-            </FormField>
-            <FormField>
-              To · WAT (exclusive)
-              <input
-                type="date"
-                name="to"
-                defaultValue={params.get("to")?.slice(0, 10) ?? ""}
-              />
-            </FormField>
-            <FormField>
-              Payment method
-              <Dropdown
-                aria-label="Payment method"
-                name="paymentMethod"
-                defaultValue={params.get("paymentMethod") ?? ""}
-              >
-                <option value="">All</option>
-                <option value="cash">Cash</option>
-                <option value="wallet">Wallet</option>
-              </Dropdown>
-            </FormField>
-            <FormField>
-              Payment state
-              <Dropdown
-                aria-label="Payment state"
-                name="paymentStatus"
-                defaultValue={params.get("paymentStatus") ?? ""}
-              >
-                <option value="">All</option>
-                {["unpaid", "held", "settled", "released"].map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
-              </Dropdown>
-            </FormField>
-            <FormField>
-              Rider UUID
-              <input
-                name="riderId"
-                defaultValue={params.get("riderId") ?? ""}
-                pattern="[0-9a-fA-F-]{36}"
-              />
-            </FormField>
-            <FormField>
-              Driver UUID
-              <input
-                name="driverId"
-                defaultValue={params.get("driverId") ?? ""}
-                pattern="[0-9a-fA-F-]{36}"
-              />
-            </FormField>
-            <Button type="submit" variant="secondary">
-              Apply filters
-            </Button>
-            <Link className="text-link" href={pathname}>
-              Clear all
-            </Link>
-          </FilterForm>
-        </details>
+        </SearchFilterBar>
       )}
       <DataTable
         label="Trips"
@@ -322,45 +363,25 @@ export function TripDirectory({
           ],
         }))}
       />
-      <div className="table-footer">
-        <span>
-          {preview
-            ? `${rows.length} sample records · Complete fixture set`
-            : `${rows.length} records on this page`}
-        </span>
-        <span>
-          {preview ? "Local fixture filtering" : "Server pagination"} ·
-          {mode === "scheduled"
-            ? "Pickup agenda · WAT"
-            : "Requested time in WAT"}
-        </span>
-      </div>
-      {!preview && (
-        <Pagination>
-          {params.get("cursor") && (
-            <Button
-              type="submit"
-              variant="secondary"
-              onClick={() => filter("cursor", "")}
-            >
-              First page
-            </Button>
-          )}
-          {nextCursor && (
-            <Button
-              type="submit"
-              variant="secondary"
-              onClick={() => {
-                const next = new URLSearchParams(params.toString());
-                next.set("cursor", nextCursor);
-                router.push(`${pathname}?${next}`);
-              }}
-            >
-              Next page →
-            </Button>
-          )}
-        </Pagination>
-      )}
+      <Pagination
+        pagination={meta}
+        noun="trips"
+        busy={pending}
+        onPageChange={(page) => navigate(page)}
+        onPageSizeChange={(size) => navigate(1, size)}
+      >
+        {!meta && nextCursor && (
+          <Button
+            onClick={() => {
+              const next = new URLSearchParams(params.toString());
+              next.set("cursor", nextCursor);
+              router.push(`${pathname}?${next}`);
+            }}
+          >
+            Next page →
+          </Button>
+        )}
+      </Pagination>
     </div>
   );
 }

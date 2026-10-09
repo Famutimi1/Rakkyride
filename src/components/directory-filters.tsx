@@ -2,8 +2,8 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Dropdown, type DropdownOption } from "./ui/dropdown";
 import { SearchField } from "./ui/search-field";
-import { Button } from "./ui/button";
-import { FilterForm, FormField } from "./ui/filter-toolbar";
+import { SearchFilterBar } from "./ui/search-filter-bar";
+import { FormField } from "./ui/filter-toolbar";
 
 export function DirectoryFilters({
   statuses,
@@ -27,44 +27,64 @@ export function DirectoryFilters({
   const params = useSearchParams(),
     path = usePathname(),
     router = useRouter();
+  const account = !statuses && searchName === "id";
+  const choices = statuses ?? [
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
+  ];
+  const stateName = account ? "mode" : statusName;
+  const clear = () => {
+    const next = new URLSearchParams();
+    if (params.get("limit")) next.set("limit", params.get("limit")!);
+    next.set("page", "1");
+    if (defaultStatus) next.set(stateName, "");
+    router.replace(`${path}?${next}`, { scroll: false });
+  };
   return (
-    <FilterForm
-      key={params.toString()}
+    <SearchFilterBar
+      resetKey={params.toString()}
+      onClear={clear}
+      search={
+        <SearchField
+          label={searchLabel}
+          name={searchName}
+          placeholder={
+            preview
+              ? "Search by sample record ID…"
+              : `Search by ${searchLabel.toLowerCase()}…`
+          }
+          defaultValue={params.get(searchName) ?? ""}
+          pattern={preview ? undefined : "[0-9a-fA-F-]{36}"}
+        />
+      }
       aria-label="Directory filters"
       onSubmit={(event) => {
         event.preventDefault();
         const next = new URLSearchParams(params.toString());
         next.delete("cursor");
         next.delete("before");
+        next.set("page", "1");
         for (const [name, value] of new FormData(event.currentTarget)) {
           const text = String(value).trim();
-          if (text || name === statusName) next.set(name, text);
+          if (text || name === stateName) next.set(name, text);
           else next.delete(name);
         }
         router.replace(`${path}?${next}`, { scroll: false });
       }}
     >
-      <FormField label={searchLabel}>
-        <SearchField
-          label={searchLabel}
-          name={searchName}
-          placeholder={preview ? "Sample record ID…" : "Record UUID…"}
-          defaultValue={params.get(searchName) ?? ""}
-          pattern={preview ? undefined : "[0-9a-fA-F-]{36}"}
-        />
-      </FormField>
-      {statuses && (
-        <FormField label={statusLabel}>
+      {choices && (
+        <FormField label={account ? "Account status" : statusLabel}>
           <Dropdown
-            aria-label={`Directory ${statusLabel.toLowerCase()}`}
-            name={statusName}
-            defaultValue={params.get(statusName) ?? defaultStatus}
-            options={[{ value: "", label: allLabel }, ...statuses]}
+            aria-label={`Directory ${account ? "account status" : statusLabel.toLowerCase()}`}
+            name={stateName}
+            defaultValue={params.get(stateName) ?? defaultStatus}
+            options={[
+              { value: "", label: account ? "All accounts" : allLabel },
+              ...choices,
+            ]}
           />
         </FormField>
       )}
-      <Button type="submit">Apply filters</Button>
-      <Button onClick={() => router.replace(path)}>Clear filters</Button>
-    </FilterForm>
+    </SearchFilterBar>
   );
 }

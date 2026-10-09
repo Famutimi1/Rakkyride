@@ -1,4 +1,4 @@
-import { SearchField } from "./ui/search-field";
+import { pageSlice } from "@/lib/pagination";
 import { Button, LinkButton } from "./ui/button";
 import { Pagination } from "./ui/pagination";
 import { FilterForm, FormField } from "./ui/filter-toolbar";
@@ -208,10 +208,21 @@ export async function ExtendedPage({
       );
     }
     const qs = new URLSearchParams();
-    for (const k of ["status", "cursor", "id"])
+    for (const k of ["page", "limit", "status", "cursor", "id"])
       if (value(search, k)) qs.set(k, value(search, k)!);
+    if (!qs.has("cursor")) {
+      qs.set("page", qs.get("page") ?? "1");
+      qs.set("limit", qs.get("limit") ?? "20");
+    }
     const data = preview
-      ? { items: [] as Case[], nextCursor: null }
+      ? {
+          ...pageSlice(
+            [] as Case[],
+            value(search, "page"),
+            value(search, "limit"),
+          ),
+          nextCursor: null,
+        }
       : await adminRead<PageResult<Case>>(`${kind}?${qs}`);
     return (
       <>
@@ -249,6 +260,8 @@ export async function ExtendedPage({
         />
         <DirectoryTable
           preview={preview}
+          pagination={data.pagination}
+          noun="cases"
           headers={["Subject", "State", "Severity", "Assigned", "Created"]}
           nextHref={
             data.nextCursor
@@ -426,10 +439,22 @@ export async function ExtendedPage({
       createdAt: string;
     };
     const qs = new URLSearchParams(
-      value(search, "cursor") ? { cursor: value(search, "cursor")! } : {},
+      value(search, "cursor")
+        ? { cursor: value(search, "cursor")! }
+        : {
+            page: value(search, "page") ?? "1",
+            limit: value(search, "limit") ?? "20",
+          },
     );
     const data = preview
-      ? { items: [] as Exception[], nextCursor: null }
+      ? {
+          ...pageSlice(
+            [] as Exception[],
+            value(search, "page"),
+            value(search, "limit"),
+          ),
+          nextCursor: null,
+        }
       : await adminRead<PageResult<Exception>>(`reconciliation/${id}?${qs}`);
     return (
       <>
@@ -443,6 +468,7 @@ export async function ExtendedPage({
         />
         <DirectoryTable
           preview={preview}
+          pagination={data.pagination}
           headers={["Record", "State", "Amount · NGN", "Created"]}
           nextHref={
             data.nextCursor
@@ -523,10 +549,15 @@ export async function ExtendedPage({
       items: { id: string; name: string; role: string; active: boolean }[];
       coverage: string;
       nextCursor: string | null;
+      pagination?: import("@/contracts/admin").PaginationInfo;
     };
     const qs = new URLSearchParams();
-    for (const key of ["id", "status", "cursor"])
+    for (const key of ["page", "limit", "id", "status", "cursor"])
       if (value(search, key)) qs.set(key, value(search, key)!);
+    if (!qs.has("cursor")) {
+      qs.set("page", qs.get("page") ?? "1");
+      qs.set("limit", qs.get("limit") ?? "20");
+    }
     const data = preview ? null : await adminRead<Team>(`team?${qs}`);
     return (
       <>
@@ -553,6 +584,7 @@ export async function ExtendedPage({
           <DirectoryTable
             preview={false}
             rowKeys={data.items.map((row) => row.id)}
+            pagination={data.pagination}
             nextHref={
               data.nextCursor
                 ? `/admin/team?${new URLSearchParams({ ...Object.fromEntries(qs), cursor: data.nextCursor })}`
@@ -631,10 +663,21 @@ export async function ExtendedPage({
       createdAt: string;
     };
     const qs = new URLSearchParams();
-    for (const k of ["cursor", "service", "id"])
+    for (const k of ["page", "limit", "cursor", "service", "id"])
       if (value(search, k)) qs.set(k, value(search, k)!);
+    if (!qs.has("cursor")) {
+      qs.set("page", qs.get("page") ?? "1");
+      qs.set("limit", qs.get("limit") ?? "20");
+    }
     const data = preview
-      ? { items: [] as Rating[], nextCursor: null }
+      ? {
+          ...pageSlice(
+            [] as Rating[],
+            value(search, "page"),
+            value(search, "limit"),
+          ),
+          nextCursor: null,
+        }
       : await adminRead<PageResult<Rating>>(`ratings?${qs}`);
     return (
       <>
@@ -643,34 +686,21 @@ export async function ExtendedPage({
           title="Ratings & feedback"
           description="Recorded trip feedback. Feedback changes do not overwrite historical ratings."
         />
-        <FilterForm action="/admin/ratings">
-          <FormField label="Exact rating ID">
-            <SearchField
-              label="Exact rating ID"
-              name="id"
-              defaultValue={value(search, "id") ?? ""}
-              placeholder="Rating UUID…"
-              pattern={preview ? undefined : "[0-9a-fA-F-]{36}"}
-            />
-          </FormField>
-          <FormField>
-            Service
-            <Dropdown
-              aria-label="Rating service"
-              name="service"
-              defaultValue={value(search, "service") ?? ""}
-            >
-              <option value="">All services</option>
-              <option value="ride">Passenger rides</option>
-              <option value="courier">Courier</option>
-            </Dropdown>
-          </FormField>
-          <Button type="submit" variant="secondary">
-            Apply
-          </Button>
-        </FilterForm>
+        <DirectoryFilters
+          preview={preview}
+          searchLabel="Exact rating ID"
+          statusName="service"
+          statusLabel="Service"
+          allLabel="All services"
+          statuses={[
+            { value: "ride", label: "Passenger rides" },
+            { value: "courier", label: "Courier" },
+          ]}
+        />
         <DirectoryTable
           preview={preview}
+          pagination={data.pagination}
+          noun="ratings"
           headers={[
             "Trip",
             "Service",

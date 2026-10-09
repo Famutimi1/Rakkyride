@@ -10,6 +10,7 @@ async function body(req: IncomingMessage) {
   for await (const part of req) raw += part;
   return raw ? (JSON.parse(raw) as Record<string, string>) : {};
 }
+const directoryRequests: string[] = [];
 const mock = createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json");
   if (req.url === "/api/auth/login/initiate") {
@@ -47,6 +48,54 @@ const mock = createServer(async (req, res) => {
               ? "admin"
               : "user",
         },
+      }),
+    );
+    return;
+  }
+  if (req.url === "/api/admin/environment") {
+    res.end(
+      JSON.stringify({ nodeEnvironment: "test", paymentEnvironment: "test" }),
+    );
+    return;
+  }
+  if (req.url?.startsWith("/api/admin/users?")) {
+    if (req.headers.authorization !== "Bearer staff-test") {
+      res.statusCode = 403;
+      res.end("{}");
+      return;
+    }
+    directoryRequests.push(req.url);
+    const query = new URL(req.url, "http://stub.invalid").searchParams;
+    const page = Number(query.get("page")),
+      size = Number(query.get("limit"));
+    const from = (page - 1) * size + 1,
+      to = Math.min(page * size, 108);
+    res.end(
+      JSON.stringify({
+        items: Array.from({ length: to - from + 1 }, (_, index) => ({
+          id: `00000000-0000-0000-0000-${String(from + index).padStart(12, "0")}`,
+          name: `Test person ${from + index}`,
+          phoneMasked: "••• 0000",
+          emailMasked: "Not supplied",
+          active: true,
+          joinedAt: "2026-10-09T10:00:00Z",
+          trips: 0,
+          driver: null,
+        })),
+        nextCursor: null,
+        count: { value: 108, exact: true },
+        asOf: "2026-10-09T10:00:00Z",
+        pagination: {
+          page,
+          pageSize: size,
+          total: 108,
+          totalPages: Math.ceil(108 / size),
+          from,
+          to,
+          hasPrevious: page > 1,
+          hasNext: to < 108,
+        },
+        scope: { dateBasis: "created_at" },
       }),
     );
     return;
@@ -194,6 +243,27 @@ try {
   assert.equal(payload.includes("staff-test"), false);
   assert.equal(payload.includes("refresh-test"), false);
   const cookieHeader = cookies.map((cookie) => cookie.split(";")[0]).join("; ");
+  const directory = await fetch(
+    base + "/admin/riders?page=2&limit=20&mode=active",
+    { headers: { Cookie: cookieHeader } },
+  );
+  assert.equal(directory.status, 200);
+  const directoryHtml = await directory.text();
+  const directoryText = directoryHtml.replace(/<[^>]*>/g, "");
+  assert.ok(
+    directoryText.includes("Showing 21–40 of 108 users"),
+    "server renders the API total and range",
+  );
+  assert.ok(directoryText.includes("Page 2 of 6"));
+  assert.ok(
+    directoryRequests.includes("/api/admin/users?page=2&limit=20&mode=active"),
+  );
+  assert.equal(directoryHtml.includes("staff-test"), false);
+  await fetch(base + "/admin/riders", { headers: { Cookie: cookieHeader } });
+  assert.ok(
+    directoryRequests.includes("/api/admin/users?page=1&limit=20"),
+    "directory defaults use API pagination",
+  );
   const recordSearch = (origin: string, cookie: string) =>
     fetch(`${base}/api/admin/search`, {
       method: "POST",
@@ -233,7 +303,7 @@ try {
       .every((cookie) => /Expires=Thu, 01 Jan 1970/i.test(cookie)),
   );
   console.log(
-    "PASS: production fixture isolation, route guard, CSRF rejection, nonstaff rejection, secure cookies, token redaction, refresh, logout, body-only authenticated record search.",
+    "PASS: production fixture isolation, route guard, CSRF rejection, nonstaff rejection, secure cookies, token redaction, refresh, logout, body-only authenticated record search, server-rendered API pagination and filtered query forwarding.",
   );
 } finally {
   child.kill("SIGTERM");

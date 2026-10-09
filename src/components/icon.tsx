@@ -18,6 +18,7 @@ const paths: Record<string, string> = {
     "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2",
   pulse: "M2 12h5l3-8 4 16 3-8h5",
   search: "M21 21l-5-5 M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
+  filter: "M3 4h18l-7 8v7l-4 2v-9z",
   clock: "M12 7v5l3 2 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0",
   alert: "m12 3 10 18H2z M12 9v5 M12 17v1",
   lock: "M5 10h14v11H5z M8 10V6a4 4 0 0 1 8 0v4 M12 14v3",
