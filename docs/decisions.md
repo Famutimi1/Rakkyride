@@ -1,13 +1,17 @@
-# Implementation decisions — 9 October 2026
+# Approved implementation baseline — 9 October 2026
 
-Approved by the request: separate Next.js / TypeScript project named rakkydashboard, using the existing Rakky brand and Express backend. Core dependencies: Next, React, TypeScript; existing Zustand remains the cross-screen state manager. No UI kit, ORM, chart library or new infrastructure added.
+The user approved a separate Next.js / TypeScript project named rakkydashboard and one shared Express backend at `/Users/mac/Desktop/ride_app/backend`. Current migration/schema/status vocabulary and domain-owned admin logic are the baseline. This supersedes the older conceptual schema and matching-only placement instruction for this work.
 
-The canonical source specification is ../ride_app/docs/design/admin-dashboard-implementation-spec.md. A reference copy is included here; its original relative links resolve in ride_app.
+Existing admin/super_admin accounts authenticate with the existing OTP foundation. JWT pairs remain in server-managed HttpOnly cookies. Existing staff accounts are not created or promoted by public registration. Fine-grained scopes, privileged step-up and owner provisioning/revocation policy are not yet approved.
 
-Theme adapter reads the existing mobile colors.ts exports and generates CSS variables with a source checksum. Generated tokens are committed so the dashboard can build independently. Run npm run sync:brand after changes in the source repository. No independent palette is authored.
+The user approved `support_cases`, `safety_incidents`, append-only `care_activity`, immutable protection and target/version expansion of `admin_audit_log`, and the official `@socket.io/redis-adapter` dependency. Migration 010 is applied to the local development database only. Support endpoints require staff; safety and staff directory endpoints require super_admin. Safety audit entries are hidden from ordinary admin audit reads.
 
-Pending owner decisions from section 14: domain-owned backend placement versus older matching-only rule; current schema/status baseline; staff provisioning/session policy; scopes and step-up; audit extensions; document serving/storage; support/safety storage and operations; interventions; commercial values; returned-courier refunds; multi-instance Socket.io adapter.
+Cases/incidents are internal staff intake. No external message channel, customer SOS delivery, attachments or retention period has been selected. Safety notes do not imply emergency dispatch or guaranteed response.
 
-Development fixtures are explicitly labeled and opt-in; production refuses fixture mode. No fixture money action changes data or calls a provider. Live data and staff authorization remain disabled until their integration is implemented and verified. Deferred P1/P2 modules are omitted from pilot navigation.
+Canonical mobile theme exports generate CSS semantic variables with a checksum. The same source logo and Inter font assets are used. No UI kit, ORM, clustering dependency or additional infrastructure was added. Existing dependencies morgan, proxy-addr and qs received compatible security updates; the backend package audit reports no vulnerabilities.
 
-API inventory and initial TypeScript contracts are committed before page implementation. Proposed endpoints must not be substituted with participant-only mobile endpoints. See src/contracts/admin.ts. Read APIs must enforce staff scope server-side; a UI guard is insufficient.
+Development fixtures are explicit and opt-in; production refuses fixture mode. Real reads require backend staff authorization. Wallet mutations and configuration editing are separately gated off in the dashboard. Sweeps, provider refunds, manual payout approval, arbitrary trip state changes, pricing writes and public staff role editing are not provided.
+
+The API/type inventory was committed before page implementation and is now updated to distinguish implemented routes and gated actions. Backend route handlers remain HTTP-only; services own business logic and use raw parameterized PostgreSQL queries and existing Redis.
+
+The original source specification remains `/Users/mac/Desktop/ride_app/docs/design/admin-dashboard-implementation-spec.md`. Its reference copy is included here; its original relative repository links resolve in ride_app.

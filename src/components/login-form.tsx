@@ -1,0 +1,123 @@
+"use client";
+import { useState, type FormEvent } from "react";
+
+export function LoginForm({ reason }: { reason?: string }) {
+  const [phone, setPhone] = useState(""),
+    [code, setCode] = useState(""),
+    [sent, setSent] = useState(false),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  async function perform(action: string) {
+    setBusy(true);
+    setError("");
+    try {
+      const send = () =>
+        fetch(`/api/session/${action}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone, code }),
+        });
+      const response =
+        action === "refresh" && navigator.locks
+          ? await navigator.locks.request("rakky-session-refresh", send)
+          : await send();
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "Sign-in failed.");
+        return;
+      }
+      if (action === "initiate") setSent(true);
+      else {
+        window.location.assign("/admin");
+      }
+    } catch {
+      setError("Could not connect. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    void perform(sent ? "verify" : "initiate");
+  }
+  return (
+    <form onSubmit={submit} className="login-form">
+      {reason && (
+        <div className="notice">
+          {reason === "forbidden"
+            ? "This account does not have staff access."
+            : reason === "expired"
+              ? "Your session expired. Renew your session or sign in again."
+              : "The backend is unavailable. Please try again."}
+        </div>
+      )}
+      <label>
+        Staff phone number
+        <input
+          type="tel"
+          autoComplete="tel"
+          placeholder="+2348012345678"
+          required
+          pattern="\+234[0-9]{10}"
+          value={phone}
+          readOnly={sent}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+      </label>
+      {sent && (
+        <label>
+          Verification code
+          <input
+            autoFocus
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]{6}"
+            maxLength={6}
+            required
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
+        </label>
+      )}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      <button className="button primary" disabled={busy}>
+        {busy
+          ? "Please wait…"
+          : sent
+            ? "Verify and sign in"
+            : "Send verification code"}
+      </button>
+      {sent && (
+        <button
+          type="button"
+          className="button secondary"
+          disabled={busy}
+          onClick={() => {
+            setSent(false);
+            setCode("");
+          }}
+        >
+          Use a different number
+        </button>
+      )}
+      {reason === "expired" && (
+        <button
+          type="button"
+          className="button secondary"
+          disabled={busy}
+          onClick={() => void perform("refresh")}
+        >
+          Renew existing session
+        </button>
+      )}
+      <p className="fine-print">
+        Staff access must be provisioned by the owner. Public registration
+        cannot grant administration access.
+      </p>
+    </form>
+  );
+}
