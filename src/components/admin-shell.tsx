@@ -1,4 +1,10 @@
 "use client";
+import { Dialog } from "./ui/dialog";
+import { Button } from "./ui/button";
+import { RecordSearch } from "./record-search";
+import type { StaffSearchHit } from "@/contracts/admin";
+import { SearchField } from "./ui/search-field";
+import { Dropdown } from "./ui/dropdown";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -13,16 +19,67 @@ export function AdminShell({
   staffName,
   staffRole,
   environment,
+  previewRecords,
 }: {
   children: ReactNode;
   preview: boolean;
   staffName?: string;
   staffRole?: string;
   environment: string;
+  previewRecords?: StaffSearchHit[];
 }) {
   const pathname = usePathname();
   const { theme, setTheme, menuOpen, setMenuOpen } = useUiStore();
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchMode, setSearchMode] = useState<"pages" | "records">("pages");
+  const [mobile, setMobile] = useState(false);
+  const sidebar = useRef<HTMLElement>(null);
+  const navTrigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const media = matchMedia("(max-width:1023px)");
+    const changed = () => setMobile(media.matches);
+    changed();
+    media.addEventListener("change", changed);
+    return () => media.removeEventListener("change", changed);
+  }, []);
+  useEffect(() => {
+    if (!mobile || !menuOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const elements = () =>
+      Array.from(
+        sidebar.current?.querySelectorAll<HTMLElement>(
+          "a[href],button:not(:disabled),input:not(:disabled)",
+        ) ?? [],
+      );
+    elements()[0]?.focus();
+    const key = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMenuOpen(false);
+      }
+      if (event.key === "Tab") {
+        const items = elements(),
+          first = items[0],
+          last = items.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", key);
+    return () => {
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", key);
+      navTrigger.current?.focus();
+    };
+  }, [mobile, menuOpen, setMenuOpen]);
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     setMenuOpen(false);
@@ -52,9 +109,21 @@ export function AdminShell({
         />
       )}
       <aside
+        ref={sidebar}
+        inert={mobile && !menuOpen}
+        role={mobile ? "dialog" : undefined}
+        aria-modal={mobile && menuOpen ? true : undefined}
         className={`sidebar ${menuOpen ? "is-open" : ""}`}
         aria-label="Main navigation"
       >
+        <button
+          type="button"
+          className="icon-button sidebar-close"
+          aria-label="Close navigation menu"
+          onClick={() => setMenuOpen(false)}
+        >
+          <Icon name="close" />
+        </button>
         <Link href="/admin" className="brand">
           <BrandLogo />
           <span>
@@ -86,15 +155,15 @@ export function AdminShell({
         <div className="sidebar-footer">
           <label className="theme-control">
             <span>Appearance</span>
-            <select
+            <Dropdown
               aria-label="Appearance"
               value={theme}
-              onChange={(e) => setTheme(e.target.value as Theme)}
+              onValueChange={(value) => setTheme(value as Theme)}
             >
               <option value="light">Light</option>
               <option value="dark">Dark</option>
               <option value="system">System</option>
-            </select>
+            </Dropdown>
           </label>
           <div className="staff">
             <span className="avatar">{preview ? "PV" : "—"}</span>
@@ -107,10 +176,11 @@ export function AdminShell({
           </div>
         </div>
       </aside>
-      <div className="workspace">
+      <div className="workspace" inert={mobile && menuOpen}>
         <header className="topbar">
           <div className="breadcrumb">
             <button
+              ref={navTrigger}
               className="icon-button menu-button"
               aria-label="Open navigation"
               aria-expanded={menuOpen}
@@ -125,10 +195,14 @@ export function AdminShell({
           <div className="topbar-actions">
             <button
               className="search-trigger"
-              onClick={() => dialog.current?.showModal()}
+              aria-label="Search workspace"
+              onClick={() => {
+                setSearchOpen(true);
+                dialog.current?.showModal();
+              }}
             >
               <Icon name="search" />
-              <span>Find a page</span>
+              <span>Search workspace</span>
               <kbd>⌕</kbd>
             </button>
             <span className="environment">
@@ -142,7 +216,7 @@ export function AdminShell({
           <Icon name={preview ? "file" : "lock"} size={15} />
           {preview
             ? "Development preview · All people, trips and amounts are fictional. Snapshot: 09 Oct 2026, 11:30 WAT."
-            : "Staff workspace · Authorized API snapshots. Live subscriptions and mutations are not enabled."}
+            : "Staff workspace · Authorized snapshots. Sensitive actions follow your role and rollout settings."}
           <Link href="/login">
             Staff entry <span aria-hidden="true">↗</span>
           </Link>
@@ -174,42 +248,66 @@ export function AdminShell({
           </span>
         </footer>
       </div>
-      <dialog ref={dialog} className="search-dialog">
-        <div className="dialog-header">
-          <h2>Find a page</h2>
-          <button
-            className="icon-button"
-            aria-label="Close search"
-            onClick={() => dialog.current?.close()}
+      <Dialog
+        dialogRef={dialog}
+        className="search-dialog"
+        title="Search workspace"
+        closeLabel="Close search"
+        onClose={() => {
+          setSearchOpen(false);
+          setSearch("");
+        }}
+      >
+        <div className="search-mode" role="group" aria-label="Search mode">
+          <Button
+            type="button"
+            aria-pressed={searchMode === "pages"}
+            onClick={() => setSearchMode("pages")}
           >
-            <Icon name="close" />
-          </button>
+            Pages
+          </Button>
+          <Button
+            type="button"
+            aria-pressed={searchMode === "records"}
+            onClick={() => setSearchMode("records")}
+          >
+            Records
+          </Button>
         </div>
-        <p className="muted">
-          Record search will require an authorized staff API.
-        </p>
-        <input
-          autoFocus
-          aria-label="Search dashboard pages"
-          placeholder="Trips, drivers, payments…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className="search-results">
-          {matches.map(([name, href, icon]) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => dialog.current?.close()}
-            >
-              <Icon name={icon} />
-              {name}
-              <Icon name="arrow" size={15} />
-            </Link>
-          ))}
-          {!matches.length && <p>No matching pages.</p>}
-        </div>
-      </dialog>
+        {searchOpen && searchMode === "records" && (
+          <RecordSearch
+            preview={preview}
+            allowSafety={preview || staffRole === "super_admin"}
+            previewRecords={previewRecords}
+            onNavigate={() => dialog.current?.close()}
+          />
+        )}
+        {searchMode === "pages" && (
+          <>
+            <SearchField
+              autoFocus
+              label="Search dashboard pages"
+              placeholder="Trips, drivers, payments…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <div className="search-results">
+              {matches.map(([name, href, icon]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => dialog.current?.close()}
+                >
+                  <Icon name={icon} />
+                  {name}
+                  <Icon name="arrow" size={15} />
+                </Link>
+              ))}
+              {!matches.length && <p>No matching pages.</p>}
+            </div>
+          </>
+        )}
+      </Dialog>
     </div>
   );
 }

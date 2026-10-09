@@ -210,6 +210,7 @@ export type QueryState<T> =
     }
   | { state: "stale"; data: T; asOf: string; message: string };
 export const routeInventory = [
+  ["POST", "/api/admin/search", "implemented-masked-audited-rate-limited"],
   ["GET", "/api/admin/environment", "implemented-configured-mode-only"],
   ["GET", "/api/admin/overview", "implemented"],
   ["GET", "/api/admin/live", "implemented"],
@@ -260,6 +261,39 @@ export const routeInventory = [
   ["PATCH", "/api/admin/payments/settings", "existing"],
   ["POST", "/api/admin/payments/sweeps", "existing-policy-gated"],
 ] as const;
+
+export type SearchScope =
+  | "all"
+  | "people"
+  | "trips"
+  | "finance"
+  | "support"
+  | "safety";
+export interface StaffSearchHit {
+  id: string;
+  type:
+    | "person"
+    | "trip"
+    | "payment"
+    | "withdrawal"
+    | "account"
+    | "support"
+    | "safety";
+  title: string;
+  subtitle: string;
+  href: string;
+}
+export interface StaffSearchResult {
+  groups: {
+    scope: Exclude<SearchScope, "all">;
+    label: string;
+    items: StaffSearchHit[];
+    hasMore: boolean;
+    nextCursor: string | null;
+  }[];
+  asOf: string;
+  limitPerGroup: number;
+}
 
 export interface DriverApplication {
   userId: string;

@@ -1,0 +1,13 @@
+# Mobile review — 09 October 2026
+
+All 21 navigation pages and nine reachable detail/creation pages were opened individually at 390×844 and 320×740. For every page, document width matched viewport width and no main content extended outside the viewport. Measurements are saved in `mobile-review.json`; screenshots are in `screenshots/mobile`.
+
+Main pages: Overview, Live operations, All trips, Scheduled rides, Courier deliveries, Riders & customers, Drivers, Applications, Payments, Wallets & ledger, Withdrawals, Reconciliation, Support cases, Safety incidents, Ratings & feedback, Reports, Pricing, Payment settings, Audit log, Service health, Team access.
+
+Details/creation: passenger trip DEMO-RK-1049, rider demo-user-001, driver demo-driver-001, application demo-driver-003, payment demo-pay-01, ledger demo-account-1, withdrawal demo-wd-01, new support case, new safety incident. Login was additionally checked at 320px. Preview financial detail fallbacks and empty staff/care/telemetry views are intentional; they do not simulate operational evidence.
+
+Tables become labeled cards with all cells retained. Filters and buttons stack or wrap, touch controls use at least 44px height, inputs use 16px text to avoid focus zoom, long identifiers wrap, and dropdown popups are bounded to the viewport. Scheduled/courier view links have separate touch targets. Mobile navigation locks background scrolling, keeps focus inside the open menu, closes with Escape and returns focus to the opener.
+
+Functional checks included dropdown keyboard/typeahead selection, a dropdown inside a modal, report GET form submission through named hidden values, directory ID filtering and clearing, preview disabled financial fieldsets, record search results, closing search to clear text and restore focus, and Light/Dark appearance. Team/audit/ratings were checked again after their filters were added. Desktop 1440×900 still uses normal tables and had no page overflow. No new React render warnings appeared after fixing server-rendered cell keys.
+
+This was a browser responsive review, not physical-device or screen-reader certification. Preview uses fictional data and never calls operational APIs. Production cookie/CSRF/search integration was checked with the production session smoke stub; backend tests exercised real PostgreSQL in disposable schemas and temporary Redis keys. No real OTP, provider transfer, refund or staff provisioning was performed. Google Maps rendering still needs browser keys; mobile staff mutations and live provider outcomes were not exercised against real accounts.

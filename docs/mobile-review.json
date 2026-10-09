@@ -1,0 +1,428 @@
+{
+  "date": "2026-10-09",
+  "environment": "development preview",
+  "mobile": [
+    {
+      "path": "/admin",
+      "cards": 3,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Operations overview",
+      "width": 390
+    },
+    {
+      "path": "/admin/live",
+      "cards": 3,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Live operations",
+      "width": 390
+    },
+    {
+      "path": "/admin/trips",
+      "cards": 6,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "All trips",
+      "width": 390
+    },
+    {
+      "path": "/admin/scheduled",
+      "cards": 2,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Scheduled rides",
+      "width": 390
+    },
+    {
+      "path": "/admin/courier",
+      "cards": 2,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Courier deliveries",
+      "width": 390
+    },
+    {
+      "path": "/admin/riders",
+      "cards": 5,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Riders & customers",
+      "width": 390
+    },
+    {
+      "path": "/admin/drivers",
+      "cards": 3,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Drivers",
+      "width": 390
+    },
+    {
+      "path": "/admin/applications",
+      "cards": 1,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Driver applications",
+      "width": 390
+    },
+    {
+      "path": "/admin/payments",
+      "cards": 3,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Payments",
+      "width": 390
+    },
+    {
+      "path": "/admin/ledger",
+      "cards": 3,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Wallets & ledger",
+      "width": 390
+    },
+    {
+      "path": "/admin/withdrawals",
+      "cards": 2,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Withdrawals",
+      "width": 390
+    },
+    {
+      "path": "/admin/reconciliation",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Reconciliation",
+      "width": 390
+    },
+    {
+      "path": "/admin/support",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Support cases",
+      "width": 390
+    },
+    {
+      "path": "/admin/safety",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Safety incidents",
+      "width": 390
+    },
+    {
+      "path": "/admin/ratings",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Ratings & feedback",
+      "width": 390
+    },
+    {
+      "path": "/admin/reports",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Reports",
+      "width": 390
+    },
+    {
+      "path": "/admin/pricing",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Pricing",
+      "width": 390
+    },
+    {
+      "path": "/admin/settings/payments",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Payment settings",
+      "width": 390
+    },
+    {
+      "path": "/admin/audit",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Audit log",
+      "width": 390
+    },
+    {
+      "path": "/admin/health",
+      "cards": 7,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Service health",
+      "width": 390
+    },
+    {
+      "path": "/admin/team",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Team access",
+      "width": 390
+    },
+    {
+      "path": "/admin/trips/DEMO-RK-1049",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "DEMO-RK-1049",
+      "width": 390
+    },
+    {
+      "path": "/admin/riders/demo-user-001",
+      "cards": 4,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Ada Okafor",
+      "width": 390
+    },
+    {
+      "path": "/admin/drivers/demo-driver-001",
+      "cards": 2,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Chidi Eze",
+      "width": 390
+    },
+    {
+      "path": "/admin/applications/demo-driver-003",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Emeka Obi",
+      "width": 390
+    },
+    {
+      "path": "/admin/payments/demo-pay-01",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "No provider detail simulated",
+      "width": 390
+    },
+    {
+      "path": "/admin/ledger/demo-account-1",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "Ada Okafor",
+      "width": 390
+    },
+    {
+      "path": "/admin/withdrawals/demo-wd-01",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "No provider detail simulated",
+      "width": 390
+    },
+    {
+      "path": "/admin/support/new",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "New support record",
+      "width": 390
+    },
+    {
+      "path": "/admin/safety/new",
+      "cards": 0,
+      "overflows": [],
+      "scrollWidth": 390,
+      "title": "New safety record",
+      "width": 390
+    }
+  ],
+  "narrow": [
+    {
+      "path": "/admin",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/live",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/trips",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/scheduled",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/courier",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/riders",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/drivers",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/applications",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/payments",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/ledger",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/withdrawals",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/reconciliation",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/support",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/safety",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/ratings",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/reports",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/pricing",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/settings/payments",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/audit",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/health",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/team",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/trips/DEMO-RK-1049",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/riders/demo-user-001",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/drivers/demo-driver-001",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/applications/demo-driver-003",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/payments/demo-pay-01",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/ledger/demo-account-1",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/withdrawals/demo-wd-01",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/support/new",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    },
+    {
+      "path": "/admin/safety/new",
+      "overflows": [],
+      "scrollWidth": 320,
+      "width": 320
+    }
+  ]
+}

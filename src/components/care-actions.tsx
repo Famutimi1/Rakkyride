@@ -1,4 +1,6 @@
 "use client";
+import { FormField } from "./ui/filter-toolbar";
+import { Dropdown } from "./ui/dropdown";
 import { useState } from "react";
 import { ConfirmAction } from "./confirm-action";
 import { Notice } from "./primitives";
@@ -19,15 +21,15 @@ export function CreateCare({
     [nextAction, setNextAction] = useState("");
   return (
     <div className="care-form">
-      <label className="form-label">
+      <FormField>
         Subject
         <input
           value={subject}
           maxLength={160}
           onChange={(e) => setSubject(e.target.value)}
         />
-      </label>
-      <label className="form-label">
+      </FormField>
+      <FormField>
         Initial internal note
         <textarea
           value={body}
@@ -35,56 +37,61 @@ export function CreateCare({
           rows={4}
           onChange={(e) => setBody(e.target.value)}
         />
-      </label>
-      <label className="form-label">
+      </FormField>
+      <FormField>
         Severity
-        <select value={severity} onChange={(e) => setSeverity(e.target.value)}>
+        <Dropdown
+          aria-label="Severity"
+          value={severity}
+          onValueChange={(value) => setSeverity(value)}
+        >
           {["low", "medium", "high", "critical"].map((s) => (
             <option key={s}>{s}</option>
           ))}
-        </select>
-      </label>
+        </Dropdown>
+      </FormField>
       {kind === "support" ? (
-        <label className="form-label">
+        <FormField>
           Category
-          <select
+          <Dropdown
+            aria-label="Category"
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onValueChange={(value) => setCategory(value)}
           >
             {["trip", "payment", "account", "other"].map((s) => (
               <option key={s}>{s}</option>
             ))}
-          </select>
-        </label>
+          </Dropdown>
+        </FormField>
       ) : (
-        <label className="form-label">
+        <FormField>
           Next staff action
           <textarea
             value={nextAction}
             maxLength={1000}
             onChange={(e) => setNextAction(e.target.value)}
           />
-        </label>
+        </FormField>
       )}
-      <label className="form-label">
+      <FormField>
         Customer UUID (optional)
         <input
           value={customerId}
           onChange={(e) => setCustomerId(e.target.value)}
         />
-      </label>
-      <label className="form-label">
+      </FormField>
+      <FormField>
         Trip UUID (optional)
         <input value={tripId} onChange={(e) => setTripId(e.target.value)} />
-      </label>
+      </FormField>
       {kind === "support" && (
-        <label className="form-label">
+        <FormField>
           Payment intent UUID (optional)
           <input
             value={paymentId}
             onChange={(e) => setPaymentId(e.target.value)}
           />
-        </label>
+        </FormField>
       )}
       <ConfirmAction
         title={`Create ${kind} record`}
@@ -142,7 +149,7 @@ export function CareActions({
         Notes are internal. Saving a note does not send a customer reply.
         Refresh before acting if another staff member changed this record.
       </Notice>
-      <label className="form-label">
+      <FormField>
         Internal note
         <textarea
           rows={4}
@@ -150,7 +157,7 @@ export function CareActions({
           value={body}
           onChange={(e) => setBody(e.target.value)}
         />
-      </label>
+      </FormField>
       <ConfirmAction
         title="Add internal note"
         label="Save note"
@@ -159,24 +166,28 @@ export function CareActions({
         payload={{ action: "note", version, body }}
         disabled={disabled || body.trim().length < 5}
       />
-      <label className="form-label">
+      <FormField>
         Next state
-        <select value={next} onChange={(e) => setNext(e.target.value)}>
+        <Dropdown
+          aria-label="Next state"
+          value={next}
+          onValueChange={(value) => setNext(value)}
+        >
           {states.map((s) => (
             <option key={s}>{s}</option>
           ))}
           {!states.length && <option>No further transition</option>}
-        </select>
-      </label>
+        </Dropdown>
+      </FormField>
       {kind === "safety" && (
-        <label className="form-label">
+        <FormField>
           Next staff action (optional update)
           <textarea
             maxLength={1000}
             value={nextAction}
             onChange={(e) => setNextAction(e.target.value)}
           />
-        </label>
+        </FormField>
       )}
       <ConfirmAction
         title="Change state"
@@ -195,10 +206,10 @@ export function CareActions({
           Boolean(nextAction && nextAction.trim().length < 5)
         }
       />
-      <label className="form-label">
+      <FormField>
         Assigned staff UUID (empty removes assignment)
         <input value={assignee} onChange={(e) => setAssignee(e.target.value)} />
-      </label>
+      </FormField>
       <ConfirmAction
         title="Update assignment"
         label="Confirm assignment"

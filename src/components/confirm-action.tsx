@@ -1,8 +1,10 @@
 "use client";
+import { Button } from "./ui/button";
+import { FormField } from "./ui/filter-toolbar";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Icon } from "./icon";
+import { Dialog } from "./ui/dialog";
 export function ConfirmAction({
   title,
   label,
@@ -137,8 +139,9 @@ export function ConfirmAction({
   }
   return (
     <>
-      <button
-        className="button secondary"
+      <Button
+        type="button"
+        variant="secondary"
         disabled={disabled}
         onClick={() => {
           setReason("");
@@ -149,22 +152,17 @@ export function ConfirmAction({
         }}
       >
         {title}
-      </button>
-      <dialog ref={dialog} className="action-dialog">
-        <div className="dialog-header">
-          <h2>{title}</h2>
-          <button
-            className="icon-button"
-            aria-label="Close confirmation"
-            disabled={busy || uncertain}
-            onClick={() => {
-              dialog.current?.close();
-              if (result) router.refresh();
-            }}
-          >
-            <Icon name="close" />
-          </button>
-        </div>
+      </Button>
+      <Dialog
+        dialogRef={dialog}
+        className="action-dialog"
+        title={title}
+        closeLabel="Close confirmation"
+        closeDisabled={busy || uncertain}
+        onClose={() => {
+          if (result) router.refresh();
+        }}
+      >
         {result ? (
           <div role="status" className="action-result">
             <h3>Action confirmed</h3>
@@ -183,21 +181,22 @@ export function ConfirmAction({
               </Link>
             )}
             {result.auditId && <p>Audit record {result.auditId}</p>}
-            <button
-              className="button primary"
+            <Button
+              type="button"
+              variant="primary"
               onClick={() => {
                 dialog.current?.close();
                 router.refresh();
               }}
             >
               Done
-            </button>
+            </Button>
           </div>
         ) : (
           <>
             <p className="muted">{description}</p>
             <div className="confirmation-context">{children}</div>
-            <label className="form-label">
+            <FormField>
               Reason
               <textarea
                 required
@@ -208,7 +207,7 @@ export function ConfirmAction({
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
-            </label>
+            </FormField>
             {error && (
               <p className="form-error" role="alert">
                 {error}
@@ -216,16 +215,18 @@ export function ConfirmAction({
             )}
             <div className="dialog-actions">
               {uncertain && (
-                <button
-                  className="button secondary"
+                <Button
+                  type="button"
+                  variant="secondary"
                   disabled={busy}
                   onClick={() => void check()}
                 >
                   Check status
-                </button>
+                </Button>
               )}
-              <button
-                className="button primary"
+              <Button
+                type="button"
+                variant="primary"
                 disabled={busy || reason.trim().length < 5}
                 onClick={() => void submit()}
               >
@@ -234,7 +235,7 @@ export function ConfirmAction({
                   : uncertain
                     ? "Retry identical operation"
                     : label}
-              </button>
+              </Button>
             </div>
             {operation.current && (
               <p className="fine-print">
@@ -243,7 +244,7 @@ export function ConfirmAction({
             )}
           </>
         )}
-      </dialog>
+      </Dialog>
     </>
   );
 }

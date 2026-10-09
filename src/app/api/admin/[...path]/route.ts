@@ -13,6 +13,7 @@ const readRules = [
   ),
 ];
 const mutationRules = [
+  /^search$/i,
   /^(support|safety)$/i,
   new RegExp(`^(support|safety)/${uuid}/activity$`, "i"),
   /^payments\/(refunds|adjustments|settings)$/i,
@@ -30,6 +31,7 @@ async function handle(
 ) {
   const path = (await params).path.join("/");
   const read = request.method === "GET";
+  const inspection = read || path === "search";
   if (!(read ? readRules : mutationRules).some((rule) => rule.test(path)))
     return json({ error: "This operation is unavailable." }, 404);
   if (
@@ -126,7 +128,7 @@ async function handle(
   } catch {
     return json(
       {
-        error: read
+        error: inspection
           ? "The staff service is unavailable."
           : "The outcome is uncertain. Check status before repeating the identical operation.",
       },

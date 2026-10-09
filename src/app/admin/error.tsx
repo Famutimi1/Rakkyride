@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/ui/button";
 export default function ErrorPage({ reset }: { reset: () => void }) {
   return (
     <section className="query-state" role="alert">
@@ -7,9 +8,9 @@ export default function ErrorPage({ reset }: { reset: () => void }) {
         The staff API is unavailable or returned an unexpected response. Your
         filters are preserved.
       </p>
-      <button className="button primary" onClick={reset}>
+      <Button type="submit" variant="primary" onClick={reset}>
         Try again
-      </button>
+      </Button>
     </section>
   );
 }

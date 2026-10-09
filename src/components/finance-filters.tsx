@@ -1,4 +1,8 @@
 "use client";
+import { Button } from "./ui/button";
+import { FilterForm, FormField } from "./ui/filter-toolbar";
+import { SearchField } from "./ui/search-field";
+import { Dropdown } from "./ui/dropdown";
 import { useState } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -26,8 +30,8 @@ export function FinanceFilters({
           ? "account kind and owner"
           : "status, reference, amount, date"}
       </summary>
-      <form
-        className="report-filters"
+      <FilterForm
+        key={params.toString()}
         onSubmit={(e) => {
           e.preventDefault();
           setError("");
@@ -56,29 +60,37 @@ export function FinanceFilters({
         <fieldset disabled={preview} className="filter-fields">
           {kind === "ledger" ? (
             <>
-              <label className="form-label">
+              <FormField>
                 Account kind
-                <select name="kind" defaultValue={params.get("kind") ?? ""}>
+                <Dropdown
+                  aria-label="Account kind"
+                  name="kind"
+                  defaultValue={params.get("kind") ?? ""}
+                >
                   <option value="">All</option>
                   <option value="wallet">Rider wallets</option>
                   <option value="earnings">Driver earnings</option>
                   <option value="system">System accounts</option>
-                </select>
-              </label>
-              <label className="form-label">
+                </Dropdown>
+              </FormField>
+              <FormField>
                 Owner UUID
                 <input
                   name="ownerUserId"
                   defaultValue={params.get("ownerUserId") ?? ""}
                   pattern="[0-9a-fA-F-]{36}"
                 />
-              </label>
+              </FormField>
             </>
           ) : (
             <>
-              <label className="form-label">
+              <FormField>
                 State
-                <select name="status" defaultValue={params.get("status") ?? ""}>
+                <Dropdown
+                  aria-label="Payment or withdrawal state"
+                  name="status"
+                  defaultValue={params.get("status") ?? ""}
+                >
                   <option value="">All</option>
                   {(kind === "payments"
                     ? [
@@ -92,80 +104,84 @@ export function FinanceFilters({
                   ).map((s) => (
                     <option key={s}>{s}</option>
                   ))}
-                </select>
-              </label>
+                </Dropdown>
+              </FormField>
               {kind === "payments" && (
-                <label className="form-label">
+                <FormField>
                   Target
-                  <select
+                  <Dropdown
+                    aria-label="Funding target"
                     name="target"
                     defaultValue={params.get("target") ?? ""}
                   >
                     <option value="">All</option>
                     <option value="wallet">Wallet</option>
                     <option value="earnings">Earnings</option>
-                  </select>
-                </label>
+                  </Dropdown>
+                </FormField>
               )}
-              <label className="form-label">
+              <FormField>
                 Exact provider reference
-                <input
+                <SearchField
+                  label="Exact provider reference"
                   name="reference"
                   maxLength={80}
                   defaultValue={params.get("reference") ?? ""}
                 />
-              </label>
-              <label className="form-label">
+              </FormField>
+              <FormField>
                 User UUID
                 <input
                   name="userId"
                   defaultValue={params.get("userId") ?? ""}
                   pattern="[0-9a-fA-F-]{36}"
                 />
-              </label>
-              <label className="form-label">
+              </FormField>
+              <FormField>
                 Minimum amount · NGN
                 <input
                   name="minAmount"
                   inputMode="decimal"
                   defaultValue={naira(params.get("minKobo"))}
                 />
-              </label>
-              <label className="form-label">
+              </FormField>
+              <FormField>
                 Maximum amount · NGN
                 <input
                   name="maxAmount"
                   inputMode="decimal"
                   defaultValue={naira(params.get("maxKobo"))}
                 />
-              </label>
-              <label className="form-label">
+              </FormField>
+              <FormField>
                 From · WAT
                 <input
                   type="date"
                   name="from"
                   defaultValue={params.get("from")?.slice(0, 10) ?? ""}
                 />
-              </label>
-              <label className="form-label">
+              </FormField>
+              <FormField>
                 To · WAT (exclusive)
                 <input
                   type="date"
                   name="to"
                   defaultValue={params.get("to")?.slice(0, 10) ?? ""}
                 />
-              </label>
+              </FormField>
             </>
           )}
-          <label className="form-label">
+          <FormField>
             Record UUID
             <input
               name="id"
               defaultValue={params.get("id") ?? ""}
               pattern="[0-9a-fA-F-]{36}"
             />
-          </label>
-          <button className="button secondary">Apply</button>
+          </FormField>
+          <Button type="submit" variant="secondary">
+            Apply
+          </Button>
         </fieldset>
         <Link className="text-link" href={path}>
           Clear filters
@@ -180,7 +196,7 @@ export function FinanceFilters({
             {error}
           </p>
         )}
-      </form>
+      </FilterForm>
     </details>
   );
 }

@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "./ui/button";
 import { useState } from "react";
 import type { DriverApplication } from "@/contracts/admin";
 import { ConfirmAction } from "./confirm-action";
@@ -21,8 +22,9 @@ export function ApplicationReview({
         </header>
         <div className="document-tabs">
           {application.documents.map((d) => (
-            <button
-              className="button secondary"
+            <Button
+              type="submit"
+              variant="secondary"
               key={d.kind}
               aria-pressed={kind === d.kind}
               onClick={() => setKind(d.kind)}
@@ -33,7 +35,7 @@ export function ApplicationReview({
                   ? "Vehicle registration"
                   : "Insurance"}
               {!d.available ? " · Missing" : ""}
-            </button>
+            </Button>
           ))}
         </div>
         <DocumentViewer

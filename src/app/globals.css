@@ -1050,6 +1050,55 @@ tbody tr:hover {
   color: var(--text);
   max-height: 80vh;
 }
+.search-mode {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+.search-mode [aria-pressed="true"] {
+  background: var(--primarySoft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.record-search .report-filters {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+.record-search .form-label {
+  min-width: 0;
+}
+.record-search p {
+  font-size: 13px;
+}
+.search-group {
+  margin-top: 20px;
+}
+.search-group h3 {
+  font-size: 14px;
+}
+.record-search-results {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+.record-search-results a {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+.record-search-results a:hover {
+  background: var(--primarySoft);
+}
+.record-search-results span,
+.record-search-results small {
+  color: var(--textMuted);
+  font-size: 12px;
+}
 .search-dialog::backdrop {
   background: var(--overlay);
 }
@@ -1795,4 +1844,275 @@ textarea {
   color: var(--text);
   border-color: var(--borderStrong);
   font-size: 11px;
+}
+
+/* Shared controls: one semantic token set, with touch targets and bounded popups. */
+.dropdown {
+  display: inline-flex;
+  min-width: 0;
+  width: 100%;
+  font-weight: 400;
+}
+.dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--borderStrong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+}
+.dropdown-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dropdown-trigger > svg {
+  flex-shrink: 0;
+}
+.dropdown-trigger[aria-expanded="true"] {
+  border-color: var(--primary);
+}
+.dropdown-menu {
+  position: fixed;
+  z-index: 100;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  border: 1px solid var(--borderStrong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 8px 24px var(--overlay);
+  font-size: 14px;
+}
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.dropdown-option.is-active {
+  background: var(--primarySoft);
+}
+.dropdown-option[aria-selected="true"] {
+  color: var(--primary);
+  font-weight: 600;
+}
+.dropdown-option[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.filter-bar .dropdown {
+  width: auto;
+  flex: 0 1 200px;
+  min-width: 150px;
+}
+.theme-control .dropdown {
+  width: 100px;
+}
+.search-input {
+  min-height: 44px;
+}
+.search-input input {
+  min-height: 44px;
+}
+.search-clear {
+  flex-shrink: 0;
+}
+.search-dialog .search-input {
+  max-width: none;
+  margin: 16px 0;
+}
+.report-filters > .form-label,
+.filter-fields > .form-label {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.form-label input,
+.form-label textarea {
+  max-width: 100%;
+}
+.table-cell-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.table-cell-content > small {
+  display: block;
+  color: var(--textMuted);
+  margin-top: 3px;
+  font-size: 12px;
+}
+.table-mobile-controls {
+  display: none;
+}
+.pagination {
+  flex-wrap: wrap;
+}
+.sidebar-close {
+  display: none;
+}
+@media (max-width: 640px) {
+  input,
+  textarea,
+  .search-input input {
+    font-size: 16px;
+  }
+  .button,
+  .icon-button,
+  .sort-button,
+  .search-trigger {
+    min-height: 44px;
+  }
+  .search-trigger {
+    min-width: 44px;
+  }
+  .section-tabs {
+    gap: 8px;
+  }
+  .section-tabs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--surfaceMuted);
+  }
+  .data-table-cards .table-cell-content a {
+    display: inline-block;
+    min-height: 44px;
+    padding: 10px 0;
+  }
+  .filter-bar {
+    gap: 12px;
+  }
+  .filter-bar .dropdown,
+  .filter-bar .button {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .report-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    padding: 16px;
+    gap: 16px;
+  }
+  .filter-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+  }
+  .form-label,
+  .form-label input,
+  .form-label textarea {
+    width: 100%;
+    min-width: 0;
+  }
+  .data-table-cards table {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+  .data-table-cards thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .data-table-cards tbody {
+    display: block;
+    padding: 0 12px;
+  }
+  .data-table-cards tr {
+    display: block;
+    margin: 12px 0;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .data-table-cards td {
+    display: grid;
+    grid-template-columns: minmax(88px, 34%) minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    height: auto;
+    max-width: none;
+    min-height: 44px;
+    padding: 10px 0;
+    text-align: left;
+    font-size: 13px;
+  }
+  .data-table-cards td::before {
+    content: attr(data-label);
+    color: var(--textMuted);
+    font-size: 12px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .data-table-cards td:last-child {
+    border-bottom: 0;
+  }
+  .data-table-cards .dense td {
+    height: auto;
+    padding: 8px 0;
+  }
+  .data-table-cards .badge {
+    white-space: normal;
+  }
+  .data-table-cards .route-summary {
+    max-width: 100%;
+  }
+  .data-table-cards .agenda-date {
+    border: 0;
+    background: var(--surfaceMuted);
+    padding: 12px;
+  }
+  .data-table-cards .agenda-date th {
+    display: block;
+    height: auto;
+    padding: 0;
+    white-space: normal;
+    border: 0;
+  }
+  .table-mobile-controls:has(> span) {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px 0;
+    flex-wrap: wrap;
+  }
+  .page-header h1 {
+    overflow-wrap: anywhere;
+  }
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .dialog-actions > .button {
+    flex: 1 1 100%;
+  }
+}
+@media (max-width: 1023px) {
+  .sidebar-close {
+    display: flex;
+    position: absolute;
+    right: 8px;
+    top: 12px;
+    z-index: 1;
+  }
+  .sidebar .brand {
+    padding-right: 56px;
+  }
 }

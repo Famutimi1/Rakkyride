@@ -1,4 +1,6 @@
 "use client";
+import { FormField } from "./ui/filter-toolbar";
+import { Dropdown } from "./ui/dropdown";
 import { useState } from "react";
 import { ConfirmAction } from "./confirm-action";
 import { toKobo, money } from "@/lib/format";
@@ -116,7 +118,7 @@ export function PaymentSettingsEditor({
         </p>
       )}
       {fields.map(([key, , label]) => (
-        <label key={key} className="form-label">
+        <FormField key={key}>
           {label} · NGN
           <input
             inputMode="decimal"
@@ -124,9 +126,9 @@ export function PaymentSettingsEditor({
             disabled={!enabled}
             onChange={(e) => setAmounts({ ...amounts, [key]: e.target.value })}
           />
-        </label>
+        </FormField>
       ))}
-      <label className="form-label">
+      <FormField>
         New payout account cooldown · hours
         <input
           inputMode="numeric"
@@ -134,24 +136,25 @@ export function PaymentSettingsEditor({
           value={cooldown}
           onChange={(e) => setCooldown(e.target.value)}
         />
-      </label>
-      <label className="form-label">
+      </FormField>
+      <FormField>
         Payout name matching
-        <select
+        <Dropdown
+          aria-label="Payout name matching"
           disabled={!enabled}
           value={match}
-          onChange={(e) => setMatch(e.target.value)}
+          onValueChange={(value) => setMatch(value)}
         >
           {["strict", "lenient", "off"].map((s) => (
             <option key={s}>{s}</option>
           ))}
-        </select>
-      </label>
+        </Dropdown>
+      </FormField>
       <h3>Transfer fees · NGN</h3>
       {tiers.map((t, i) => (
         <fieldset key={i}>
           <legend>Tier {i + 1}</legend>
-          <label className="form-label">
+          <FormField>
             Upper amount (inclusive)
             {t.max === null ? (
               <span>No upper bound</span>
@@ -169,8 +172,8 @@ export function PaymentSettingsEditor({
                 }
               />
             )}
-          </label>
-          <label className="form-label">
+          </FormField>
+          <FormField>
             Fee
             <input
               inputMode="decimal"
@@ -184,7 +187,7 @@ export function PaymentSettingsEditor({
                 )
               }
             />
-          </label>
+          </FormField>
         </fieldset>
       ))}
       {error && (

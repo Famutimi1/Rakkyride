@@ -1,4 +1,6 @@
 "use client";
+import { DataTable } from "./ui/data-table";
+import { Button } from "./ui/button";
 import { useEffect, useRef, useState } from "react";
 import type { SampledPositions, TripPosition } from "@/contracts/admin";
 import {
@@ -242,38 +244,29 @@ export function TripEvidenceMap({
       {samples.items.length > 0 && (
         <details>
           <summary>Recorded samples ({samples.items.length})</summary>
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Sample</th>
-                  <th>Recorded · WAT</th>
-                  <th>Latitude</th>
-                  <th>Longitude</th>
-                </tr>
-              </thead>
-              <tbody>
-                {samples.items.map((point, index) => (
-                  <tr key={`${point.at}-${index}`}>
-                    <td>
-                      <button
-                        className="button secondary"
-                        aria-pressed={selected === index}
-                        onClick={() => selectPoint(index)}
-                      >
-                        Sample {index + 1}
-                      </button>
-                    </td>
-                    <td>
-                      <Timestamp value={point.at} />
-                    </td>
-                    <td>{point.latitude.toFixed(5)}</td>
-                    <td>{point.longitude.toFixed(5)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            label="Historical samples"
+            columns={[
+              { id: "sample", label: "Sample" },
+              { id: "time", label: "Recorded · WAT" },
+              { id: "latitude", label: "Latitude" },
+              { id: "longitude", label: "Longitude" },
+            ]}
+            rows={samples.items.map((point, index) => ({
+              id: `${point.at}-${index}`,
+              cells: [
+                <Button
+                  aria-pressed={selected === index}
+                  onClick={() => selectPoint(index)}
+                >
+                  Sample {index + 1}
+                </Button>,
+                <Timestamp value={point.at} />,
+                point.latitude.toFixed(5),
+                point.longitude.toFixed(5),
+              ],
+            }))}
+          />
         </details>
       )}
     </section>

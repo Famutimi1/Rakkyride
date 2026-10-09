@@ -1,4 +1,7 @@
 "use client";
+import { Button } from "./ui/button";
+import { FormField } from "./ui/filter-toolbar";
+import { Dropdown } from "./ui/dropdown";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LiveSnapshot } from "@/contracts/admin";
@@ -194,42 +197,45 @@ export function LiveOperations({
             Snapshot <Timestamp value={data.asOf} />
           </span>
         </div>
-        <button
-          className="button secondary"
+        <Button
+          type="submit"
+          variant="secondary"
           disabled={preview || busy}
           onClick={() => void refresh()}
         >
           {busy ? "Refreshing…" : "Refresh snapshot"}
-        </button>
+        </Button>
       </div>
       {pending && (
-        <button
-          className="button secondary"
+        <Button
+          type="submit"
+          variant="secondary"
           onClick={() => {
             setData(pending);
             setPending(null);
           }}
         >
           Updates available · Apply snapshot
-        </button>
+        </Button>
       )}
-      <label className="form-label">
+      <FormField>
         Service supply
-        <select
+        <Dropdown
+          aria-label="Service supply"
           defaultValue={initial.scope.service}
           disabled={preview}
-          onChange={(e) => {
+          onValueChange={(value) => {
             scope.current = {
               ...scope.current,
-              service: e.target.value as "ride" | "courier",
+              service: value as "ride" | "courier",
             };
             void refresh();
           }}
         >
           <option value="ride">Passenger rides</option>
           <option value="courier">Courier</option>
-        </select>
-      </label>
+        </Dropdown>
+      </FormField>
       {error && (
         <Notice>
           {error} Last-known records remain visible with their snapshot
@@ -276,13 +282,14 @@ export function LiveOperations({
           )}
           {key && !mapError && needsSearch && (
             <div className="search-area">
-              <button
-                className="button primary"
+              <Button
+                type="submit"
+                variant="primary"
                 disabled={preview || busy}
                 onClick={searchArea}
               >
                 Search this area
-              </button>
+              </Button>
             </div>
           )}
           <div className="map-caption">

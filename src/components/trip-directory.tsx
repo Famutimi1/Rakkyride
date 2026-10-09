@@ -1,12 +1,17 @@
 "use client";
+import { Button } from "./ui/button";
+import { FilterForm, FormField, FilterToolbar } from "./ui/filter-toolbar";
+import { Dropdown } from "./ui/dropdown";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { tripStatuses, type Trip } from "@/contracts/admin";
 import { statusLabel } from "@/lib/format";
 import { useUiStore } from "@/lib/ui-store";
-import { Icon } from "./icon";
-import { MoneyValue, StatusBadge, Timestamp, QueryState } from "./primitives";
+import { SearchField } from "./ui/search-field";
+import { DataTable } from "./ui/data-table";
+import { Pagination } from "./ui/pagination";
+import { MoneyValue, StatusBadge, Timestamp } from "./primitives";
 export function TripDirectory({
   trips,
   preview,
@@ -82,23 +87,24 @@ export function TripDirectory({
   return (
     <div className="directory">
       {showFilters && (
-        <div className="filter-bar">
-          <div className="search-input">
-            <Icon name="search" />
-            <input
-              aria-label="Find a trip by exact ID"
-              placeholder="Find a trip ID…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !preview) filter("id", query);
-              }}
-            />
-          </div>
-          <select
+        <FilterToolbar label="Trip filters">
+          <SearchField
+            label="Find a trip by exact ID"
+            placeholder="Find a trip ID…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onSearch={(value) => {
+              if (!preview) filter("id", value);
+            }}
+            onClear={() => {
+              setQuery("");
+              if (!preview) filter("id", "");
+            }}
+          />
+          <Dropdown
             aria-label="Trip status"
             value={status}
-            onChange={(e) => filter("status", e.target.value)}
+            onValueChange={(value) => filter("status", value)}
           >
             <option value="">All statuses</option>
             {tripStatuses.map((s) => (
@@ -106,21 +112,25 @@ export function TripDirectory({
                 {statusLabel(s, mode === "courier" ? "courier" : undefined)}
               </option>
             ))}
-          </select>
+          </Dropdown>
           {mode !== "courier" && (
-            <select
+            <Dropdown
               aria-label="Service"
               value={service}
-              onChange={(e) => filter("service", e.target.value)}
+              onValueChange={(value) => filter("service", value)}
             >
               <option value="">All services</option>
               <option value="ride">Passenger</option>
               <option value="courier">Courier</option>
-            </select>
+            </Dropdown>
           )}
-          <button className="button secondary" onClick={() => setDense(!dense)}>
+          <Button
+            type="submit"
+            variant="secondary"
+            onClick={() => setDense(!dense)}
+          >
             {dense ? "Comfortable" : "Compact"} rows
-          </button>
+          </Button>
           {(status || service || query) && (
             <button
               className="text-link"
@@ -132,13 +142,12 @@ export function TripDirectory({
               Clear filters
             </button>
           )}
-        </div>
+        </FilterToolbar>
       )}
       {showFilters && !preview && (
         <details className="advanced-filters">
           <summary>More filters · date, payment, rider, driver</summary>
-          <form
-            className="report-filters"
+          <FilterForm
             onSubmit={(event) => {
               event.preventDefault();
               const next = new URLSearchParams(params.toString());
@@ -151,47 +160,50 @@ export function TripDirectory({
               router.replace(`${pathname}?${next}`, { scroll: false });
             }}
           >
-            <label className="form-label">
+            <FormField>
               Date basis
-              <select
+              <Dropdown
+                aria-label="Date basis"
                 name="dateBasis"
                 defaultValue={params.get("dateBasis") ?? "requested"}
               >
                 <option value="requested">Requested</option>
                 <option value="scheduled">Scheduled pickup</option>
                 <option value="fulfilled">Completed / returned</option>
-              </select>
-            </label>
-            <label className="form-label">
+              </Dropdown>
+            </FormField>
+            <FormField>
               From · WAT
               <input
                 type="date"
                 name="from"
                 defaultValue={params.get("from")?.slice(0, 10) ?? ""}
               />
-            </label>
-            <label className="form-label">
+            </FormField>
+            <FormField>
               To · WAT (exclusive)
               <input
                 type="date"
                 name="to"
                 defaultValue={params.get("to")?.slice(0, 10) ?? ""}
               />
-            </label>
-            <label className="form-label">
+            </FormField>
+            <FormField>
               Payment method
-              <select
+              <Dropdown
+                aria-label="Payment method"
                 name="paymentMethod"
                 defaultValue={params.get("paymentMethod") ?? ""}
               >
                 <option value="">All</option>
                 <option value="cash">Cash</option>
                 <option value="wallet">Wallet</option>
-              </select>
-            </label>
-            <label className="form-label">
+              </Dropdown>
+            </FormField>
+            <FormField>
               Payment state
-              <select
+              <Dropdown
+                aria-label="Payment state"
                 name="paymentStatus"
                 defaultValue={params.get("paymentStatus") ?? ""}
               >
@@ -199,154 +211,117 @@ export function TripDirectory({
                 {["unpaid", "held", "settled", "released"].map((s) => (
                   <option key={s}>{s}</option>
                 ))}
-              </select>
-            </label>
-            <label className="form-label">
+              </Dropdown>
+            </FormField>
+            <FormField>
               Rider UUID
               <input
                 name="riderId"
                 defaultValue={params.get("riderId") ?? ""}
                 pattern="[0-9a-fA-F-]{36}"
               />
-            </label>
-            <label className="form-label">
+            </FormField>
+            <FormField>
               Driver UUID
               <input
                 name="driverId"
                 defaultValue={params.get("driverId") ?? ""}
                 pattern="[0-9a-fA-F-]{36}"
               />
-            </label>
-            <button className="button secondary">Apply filters</button>
+            </FormField>
+            <Button type="submit" variant="secondary">
+              Apply filters
+            </Button>
             <Link className="text-link" href={pathname}>
               Clear all
             </Link>
-          </form>
+          </FilterForm>
         </details>
       )}
-      {rows.length === 0 ? (
-        <QueryState
-          title="No matching trips"
-          message="Try another trip ID or clear your filters."
-          icon="search"
-        />
-      ) : (
-        <div
-          className="table-scroll"
-          role="region"
-          aria-label="Trips, scroll horizontally for all columns"
-          tabIndex={0}
-        >
-          <table className={dense ? "dense" : ""}>
-            <thead>
-              <tr>
-                <th>Trip / service</th>
-                <th>
-                  <button
-                    className="sort-button"
-                    disabled={!preview}
-                    onClick={() =>
-                      filter("order", order === "desc" ? "asc" : "desc")
-                    }
-                  >
-                    {mode === "scheduled"
-                      ? `Scheduled pickup ${params.get("view") === "history" ? "↓" : "↑"}`
-                      : `Requested ${order === "desc" ? "↓" : "↑"}`}
-                  </button>
-                </th>
-                <th>Route</th>
-                <th>People</th>
-                <th>Trip status</th>
-                <th>Payment</th>
-                <th className="numeric">Fare · NGN</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((t, index) => (
-                <Fragment key={t.id}>
-                  {mode === "scheduled" &&
-                    (index === 0 ||
-                      new Date(
-                        rows[index - 1].scheduledAt ??
-                          rows[index - 1].requestedAt,
-                      ).toLocaleDateString("en-CA", {
-                        timeZone: "Africa/Lagos",
-                      }) !==
-                        new Date(
-                          t.scheduledAt ?? t.requestedAt,
-                        ).toLocaleDateString("en-CA", {
-                          timeZone: "Africa/Lagos",
-                        })) && (
-                      <tr className="agenda-date">
-                        <th colSpan={7} scope="rowgroup">
-                          {new Date(
-                            t.scheduledAt ?? t.requestedAt,
-                          ).toLocaleDateString("en-NG", {
-                            timeZone: "Africa/Lagos",
-                            weekday: "long",
-                            month: "long",
-                            day: "numeric",
-                          })}{" "}
-                          · WAT
-                        </th>
-                      </tr>
-                    )}
-                  <tr>
-                    <td>
-                      <Link
-                        className="record-link"
-                        href={`/admin/trips/${t.id}`}
-                      >
-                        {t.id}
-                      </Link>
-                      <small>
-                        {t.service === "courier"
-                          ? "Courier delivery"
-                          : "Passenger ride"}
-                      </small>
-                    </td>
-                    <td>
-                      <Timestamp value={t.scheduledAt ?? t.requestedAt} />
-                      {t.scheduledAt && <small>Scheduled pickup</small>}
-                    </td>
-                    <td>
-                      <div className="route-summary">
-                        <span>
-                          <i />
-                          {t.pickup}
-                        </span>
-                        <span>
-                          <i />
-                          {t.destination}
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      {t.riderName}
-                      <small>{t.driverName ?? "Awaiting driver"}</small>
-                    </td>
-                    <td>
-                      <StatusBadge status={t.status} service={t.service} />
-                    </td>
-                    <td>
-                      <StatusBadge status={t.paymentStatus} />
-                      <small>
-                        {t.paymentMethod === "wallet" ? "Wallet" : "Cash"}
-                        {t.status === "scheduled"
-                          ? " · Checked at dispatch"
-                          : ""}
-                      </small>
-                    </td>
-                    <td className="numeric">
-                      <MoneyValue value={t.fareKobo} />
-                    </td>
-                  </tr>
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        label="Trips"
+        emptyTitle="No matching trips"
+        emptyMessage="Try another trip ID or clear your filters."
+        columns={[
+          { id: "trip", label: "Trip / service" },
+          {
+            id: "time",
+            mobileLabel:
+              mode === "scheduled" ? "Scheduled pickup" : "Requested",
+            label: (
+              <button
+                className="sort-button"
+                disabled={!preview}
+                onClick={() =>
+                  filter("order", order === "desc" ? "asc" : "desc")
+                }
+              >
+                {mode === "scheduled"
+                  ? `Scheduled pickup ${params.get("view") === "history" ? "↓" : "↑"}`
+                  : `Requested ${order === "desc" ? "↓" : "↑"}`}
+              </button>
+            ),
+          },
+          { id: "route", label: "Route" },
+          { id: "people", label: "People" },
+          { id: "status", label: "Trip status" },
+          { id: "payment", label: "Payment" },
+          { id: "fare", label: "Fare · NGN", align: "end" },
+        ]}
+        rows={rows.map((trip, index) => ({
+          id: trip.id,
+          group:
+            mode === "scheduled" &&
+            (index === 0 ||
+              new Date(
+                rows[index - 1].scheduledAt ?? rows[index - 1].requestedAt,
+              ).toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" }) !==
+                new Date(
+                  trip.scheduledAt ?? trip.requestedAt,
+                ).toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" }))
+              ? `${new Date(trip.scheduledAt ?? trip.requestedAt).toLocaleDateString("en-NG", { timeZone: "Africa/Lagos", weekday: "long", month: "long", day: "numeric" })} · WAT`
+              : undefined,
+          cells: [
+            <>
+              <Link className="record-link" href={`/admin/trips/${trip.id}`}>
+                {trip.id}
+              </Link>
+              <small>
+                {trip.service === "courier"
+                  ? "Courier delivery"
+                  : "Passenger ride"}
+              </small>
+            </>,
+            <>
+              <Timestamp value={trip.scheduledAt ?? trip.requestedAt} />
+              {trip.scheduledAt && <small>Scheduled pickup</small>}
+            </>,
+            <div className="route-summary">
+              <span>
+                <i />
+                {trip.pickup}
+              </span>
+              <span>
+                <i />
+                {trip.destination}
+              </span>
+            </div>,
+            <>
+              {trip.riderName}
+              <small>{trip.driverName ?? "Awaiting driver"}</small>
+            </>,
+            <StatusBadge status={trip.status} service={trip.service} />,
+            <>
+              <StatusBadge status={trip.paymentStatus} />
+              <small>
+                {trip.paymentMethod === "wallet" ? "Wallet" : "Cash"}
+                {trip.status === "scheduled" ? " · Checked at dispatch" : ""}
+              </small>
+            </>,
+            <MoneyValue value={trip.fareKobo} />,
+          ],
+        }))}
+      />
       <div className="table-footer">
         <span>
           {preview
@@ -361,18 +336,20 @@ export function TripDirectory({
         </span>
       </div>
       {!preview && (
-        <div className="pagination">
+        <Pagination>
           {params.get("cursor") && (
-            <button
-              className="button secondary"
+            <Button
+              type="submit"
+              variant="secondary"
               onClick={() => filter("cursor", "")}
             >
               First page
-            </button>
+            </Button>
           )}
           {nextCursor && (
-            <button
-              className="button secondary"
+            <Button
+              type="submit"
+              variant="secondary"
               onClick={() => {
                 const next = new URLSearchParams(params.toString());
                 next.set("cursor", nextCursor);
@@ -380,9 +357,9 @@ export function TripDirectory({
               }}
             >
               Next page →
-            </button>
+            </Button>
           )}
-        </div>
+        </Pagination>
       )}
     </div>
   );

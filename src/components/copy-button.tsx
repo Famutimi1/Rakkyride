@@ -1,10 +1,12 @@
 "use client";
+import { Button } from "./ui/button";
 import { useState } from "react";
 export function CopyButton({ value }: { value: string }) {
   const [label, setLabel] = useState("Copy ID");
   return (
-    <button
-      className="button secondary"
+    <Button
+      type="submit"
+      variant="secondary"
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(value);
@@ -15,6 +17,6 @@ export function CopyButton({ value }: { value: string }) {
       }}
     >
       {label}
-    </button>
+    </Button>
   );
 }

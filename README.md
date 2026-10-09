@@ -37,6 +37,12 @@ Google Maps code is implemented, but no browser key was provided, so successful 
 
 Private driver documents use the existing local private upload directory, signature validation, safe path checks and audited staff reads. Multi-instance deployment must supply shared durable private-document storage before document review is considered reliable across nodes.
 
+## Shared UI and mobile review
+
+Use the reusable dropdown, search field, filter form, table, pagination, buttons and dialog in `src/components/ui`. Tables become labeled cards on phones, and the same semantic token set serves Light/Dark themes. See [component guide](docs/components.md), [mobile review](docs/mobile-review.md) and [search API](docs/search-api.md).
+
+Staff record search is integrated with the existing backend through cookie-authenticated POST requests. Search text stays out of URLs and audit logs; contacts remain masked, results are bounded/paginated, and safety requires super_admin. Team and audit filters use their existing APIs with bounded pagination. Preview search is fictional and local only.
+
 ## Validation
 
 ```sh

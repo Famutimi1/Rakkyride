@@ -1,4 +1,6 @@
 "use client";
+import { FormField } from "./ui/filter-toolbar";
+import { Dropdown } from "./ui/dropdown";
 import { useState } from "react";
 import { toKobo, money } from "@/lib/format";
 import { ConfirmAction } from "./confirm-action";
@@ -24,7 +26,7 @@ export function RefundAction({
     <div className="money-action-form">
       <h3>Refund to rider wallet</h3>
       <p className="muted">Remaining refundable: {money(remainingKobo)}</p>
-      <label className="form-label">
+      <FormField>
         Amount · NGN
         <input
           inputMode="decimal"
@@ -33,7 +35,7 @@ export function RefundAction({
           placeholder="0.00"
           disabled={!enabled}
         />
-      </label>
+      </FormField>
       <ConfirmAction
         title="Review wallet refund"
         label={
@@ -84,18 +86,19 @@ export function AccountActions({
   return (
     <div className="money-action-form">
       <h3>Account controls</h3>
-      <label className="form-label">
+      <FormField>
         Adjustment
-        <select
+        <Dropdown
+          aria-label="Adjustment direction"
           value={direction}
-          onChange={(e) => setDirection(e.target.value as "credit" | "debit")}
+          onValueChange={(value) => setDirection(value as "credit" | "debit")}
           disabled={!enabled}
         >
           <option value="credit">Increase funds</option>
           <option value="debit">Decrease funds</option>
-        </select>
-      </label>
-      <label className="form-label">
+        </Dropdown>
+      </FormField>
+      <FormField>
         Amount · NGN
         <input
           inputMode="decimal"
@@ -104,7 +107,7 @@ export function AccountActions({
           disabled={!enabled}
           placeholder="0.00"
         />
-      </label>
+      </FormField>
       <ConfirmAction
         title="Review adjustment"
         label={

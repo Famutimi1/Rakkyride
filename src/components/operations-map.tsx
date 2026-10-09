@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { LinkButton } from "./ui/button";
 import { Icon } from "./icon";
 export function OperationsMap() {
   const [area, setArea] = useState("Lagos, Nigeria");
@@ -48,9 +49,9 @@ export function OperationsMap() {
               ? "The trip list remains available while the map is unavailable."
               : "The operations map will appear once the Google Maps browser key is configured."}
           </p>
-          <Link className="button secondary" href="/admin/trips">
+          <LinkButton href="/admin/trips">
             Browse the trip list <Icon name="arrow" size={16} />
-          </Link>
+          </LinkButton>
         </div>
       )}
       <div className="map-caption">

@@ -1,3 +1,5 @@
+import { Button, LinkButton } from "@/components/ui/button";
+import { FilterForm, FormField } from "@/components/ui/filter-toolbar";
 import { FinanceFilters } from "@/components/finance-filters";
 import {
   PaymentSettingsEditor,
@@ -25,6 +27,7 @@ import {
 import { TripDirectory } from "@/components/trip-directory";
 import { TripEvidenceMap } from "@/components/trip-evidence-map";
 import { OperationsMap, TripRouteMap } from "@/components/operations-map";
+import { DirectoryFilters } from "@/components/directory-filters";
 import { DirectoryTable } from "@/components/directory-table";
 import { ApplicationReview } from "@/components/application-review";
 import { RefundAction, AccountActions } from "@/components/money-actions";
@@ -846,8 +849,8 @@ async function RenderAdminPage({
                 })}
           </span>
         </PageHeader>
-        <form action="/admin" className="report-filters">
-          <label className="form-label">
+        <FilterForm action="/admin">
+          <FormField>
             Reporting day · WAT
             <input
               type="date"
@@ -860,14 +863,14 @@ async function RenderAdminPage({
                     })
               }
             />
-          </label>
-          <button className="button secondary" disabled={preview}>
+          </FormField>
+          <Button type="submit" variant="secondary" disabled={preview}>
             Apply day
-          </button>
+          </Button>
           <span className="muted">
             Active trips and availability remain live snapshots.
           </span>
-        </form>
+        </FilterForm>
         <div className="metric-band">
           {metrics.map(([label, value, caption, icon]) => (
             <div className="metric" key={String(label)}>
@@ -1109,7 +1112,14 @@ async function RenderAdminPage({
     const samples = fixtures.people
       .filter((p) => !drivers || Boolean(p.driver))
       .filter(
-        (p) => section !== "applications" || p.driver?.status === "pending",
+        (p) =>
+          (section !== "applications" ||
+            p.driver?.status ===
+              (typeof search.status === "string" ? search.status : "pending") ||
+            search.status === "") &&
+          (!search.id ||
+            p.id.toLowerCase().includes(String(search.id).toLowerCase())) &&
+          (!search.status || p.driver?.status === search.status),
       );
     const path =
       section === "riders"
@@ -1118,7 +1128,7 @@ async function RenderAdminPage({
           ? "drivers"
           : "driver-applications";
     const data = await records<Person>(
-      `${path}?${queryString(search, section === "applications" ? { status: "pending" } : {})}`,
+      `${path}?${queryString(search, section === "applications" && search.status === undefined ? { status: "pending" } : {})}`,
       samples,
       preview,
     );
@@ -1146,7 +1156,21 @@ async function RenderAdminPage({
             document versions.
           </Notice>
         )}
+        <DirectoryFilters
+          preview={preview}
+          searchLabel="Exact user ID"
+          defaultStatus={section === "applications" ? "pending" : ""}
+          statuses={
+            drivers
+              ? ["pending", "approved", "rejected"].map((value) => ({
+                  value,
+                  label: statusLabel(value),
+                }))
+              : undefined
+          }
+        />
         <DirectoryTable
+          rowKeys={data.items.map((person) => person.id)}
           preview={preview}
           nextHref={nextLink(`/admin/${section}`, search, data.nextCursor)}
           headers={[
@@ -1517,11 +1541,11 @@ async function RenderAdminPage({
       coverage: string;
       nextCursor: string | null;
     };
-    const data = preview
-      ? null
-      : await adminRead<Audit>(
-          `audit${typeof search.before === "string" ? `?before=${encodeURIComponent(search.before)}` : ""}`,
-        );
+    const qs = new URLSearchParams();
+    for (const key of ["before", "action", "objectId", "actorId"])
+      if (typeof search[key] === "string" && search[key])
+        qs.set(key, search[key] as string);
+    const data = preview ? null : await adminRead<Audit>(`audit?${qs}`);
     return (
       <>
         <PageHeader
@@ -1529,16 +1553,43 @@ async function RenderAdminPage({
           title="Audit log"
           description="Actor-attributed decisions, care activity, exports, and sensitive document reads."
         />
+        <DirectoryFilters
+          preview={preview}
+          searchName="objectId"
+          searchLabel="Exact audited object UUID"
+          statusName="action"
+          statusLabel="Action"
+          allLabel="All actions"
+          statuses={[
+            "staff_record_search",
+            "trip_context_read",
+            "person_context_read",
+            "support_created",
+            "support_note",
+            "support_transition",
+            "safety_created",
+            "safety_transition",
+            "driver_application_review",
+            "driver_document_view",
+            "report_export",
+            "adjustment",
+            "refund",
+            "freeze",
+            "unfreeze",
+            "settings_update",
+          ].map((action) => ({ value: action, label: statusLabel(action) }))}
+        />
         <Notice>
           {data?.coverage ??
-            "Existing audit coverage is payment-focused. Full-system and sensitive-read auditing require further implementation."}
+            "Staff reads, exports, financial actions, reviews, configuration changes, and care activity are audited. Preview does not simulate audit history."}
         </Notice>
         {data ? (
           <DirectoryTable
             preview={false}
+            rowKeys={data.items.map((row) => row.id)}
             nextHref={
               data.nextCursor
-                ? `/admin/audit?before=${data.nextCursor}`
+                ? `/admin/audit?${new URLSearchParams({ ...Object.fromEntries(qs), before: data.nextCursor })}`
                 : undefined
             }
             headers={["Actor", "Action", "Reason", "Time", "Transaction"]}
@@ -1581,8 +1632,7 @@ export default async function AdminPage(
             title="Invalid query"
             message="Clear the filters or check the record ID before trying again."
           />
-          <Link
-            className="button secondary"
+          <LinkButton
             href={
               segments[0]
                 ? `/admin/${encodeURIComponent(segments[0])}`
@@ -1590,7 +1640,7 @@ export default async function AdminPage(
             }
           >
             Clear filters and return to the list
-          </Link>
+          </LinkButton>
         </>
       );
     }

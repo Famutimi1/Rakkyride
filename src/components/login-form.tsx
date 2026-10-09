@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "./ui/button";
 import { useState, type FormEvent } from "react";
 
 export function LoginForm({ reason }: { reason?: string }) {
@@ -84,17 +85,17 @@ export function LoginForm({ reason }: { reason?: string }) {
           {error}
         </p>
       )}
-      <button className="button primary" disabled={busy}>
+      <Button type="submit" variant="primary" disabled={busy}>
         {busy
           ? "Please wait…"
           : sent
             ? "Verify and sign in"
             : "Send verification code"}
-      </button>
+      </Button>
       {sent && (
-        <button
+        <Button
           type="button"
-          className="button secondary"
+          variant="secondary"
           disabled={busy}
           onClick={() => {
             setSent(false);
@@ -102,17 +103,17 @@ export function LoginForm({ reason }: { reason?: string }) {
           }}
         >
           Use a different number
-        </button>
+        </Button>
       )}
       {reason === "expired" && (
-        <button
+        <Button
           type="button"
-          className="button secondary"
+          variant="secondary"
           disabled={busy}
           onClick={() => void perform("refresh")}
         >
           Renew existing session
-        </button>
+        </Button>
       )}
       <p className="fine-print">
         Staff access must be provisioned by the owner. Public registration

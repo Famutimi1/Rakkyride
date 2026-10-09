@@ -51,6 +51,43 @@ const mock = createServer(async (req, res) => {
     );
     return;
   }
+  if (req.url === "/api/admin/search" && req.method === "POST") {
+    const input = await body(req);
+    if (req.headers.authorization !== "Bearer staff-test") {
+      res.statusCode = 403;
+      res.end("{}");
+      return;
+    }
+    if (input.query !== "Local Test") {
+      res.statusCode = 400;
+      res.end("{}");
+      return;
+    }
+    res.end(
+      JSON.stringify({
+        groups: [
+          {
+            scope: "people",
+            label: "People",
+            items: [
+              {
+                id: "00000000-0000-0000-0000-000000000001",
+                type: "person",
+                title: "Local Test",
+                subtitle: "••• 0000",
+                href: "/admin/riders/00000000-0000-0000-0000-000000000001",
+              },
+            ],
+            hasMore: false,
+            nextCursor: null,
+          },
+        ],
+        asOf: new Date().toISOString(),
+        limitPerGroup: 20,
+      }),
+    );
+    return;
+  }
   if (req.url === "/api/auth/logout") {
     res.end(JSON.stringify({ success: true }));
     return;
@@ -157,6 +194,36 @@ try {
   assert.equal(payload.includes("staff-test"), false);
   assert.equal(payload.includes("refresh-test"), false);
   const cookieHeader = cookies.map((cookie) => cookie.split(";")[0]).join("; ");
+  const recordSearch = (origin: string, cookie: string) =>
+    fetch(`${base}/api/admin/search`, {
+      method: "POST",
+      headers: {
+        Origin: origin,
+        Cookie: cookie,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query: "Local Test", scope: "people" }),
+    });
+  assert.equal(
+    (await recordSearch("https://other.invalid", cookieHeader)).status,
+    403,
+  );
+  assert.equal((await recordSearch(base, "")).status, 401);
+  const found = await recordSearch(base, cookieHeader);
+  assert.equal(found.status, 200, await found.clone().text());
+  assert.equal(found.headers.get("cache-control"), "no-store");
+  const foundBody = await found.text();
+  assert.ok(foundBody.includes("Local Test"));
+  assert.equal(foundBody.includes("staff-test"), false);
+  assert.equal(
+    (
+      await fetch(`${base}/api/admin/search?query=Local%20Test`, {
+        headers: { Cookie: cookieHeader },
+      })
+    ).status,
+    404,
+    "search text cannot be sent by GET",
+  );
   assert.equal((await post("refresh", {}, base, cookieHeader)).status, 200);
   const loggedOut = await post("logout", {}, base, cookieHeader);
   assert.equal(loggedOut.status, 200);
@@ -166,7 +233,7 @@ try {
       .every((cookie) => /Expires=Thu, 01 Jan 1970/i.test(cookie)),
   );
   console.log(
-    "PASS: production fixture isolation, route guard, CSRF rejection, nonstaff rejection, secure cookies, token redaction, refresh, logout.",
+    "PASS: production fixture isolation, route guard, CSRF rejection, nonstaff rejection, secure cookies, token redaction, refresh, logout, body-only authenticated record search.",
   );
 } finally {
   child.kill("SIGTERM");

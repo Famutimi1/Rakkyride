@@ -1,3 +1,8 @@
+import { SearchField } from "./ui/search-field";
+import { Button, LinkButton } from "./ui/button";
+import { Pagination } from "./ui/pagination";
+import { FilterForm, FormField } from "./ui/filter-toolbar";
+import { Dropdown } from "./ui/dropdown";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { adminRead } from "@/lib/server";
@@ -11,6 +16,7 @@ import {
   StatusBadge,
   MoneyValue,
 } from "./primitives";
+import { DirectoryFilters } from "./directory-filters";
 import { DirectoryTable } from "./directory-table";
 import { CreateCare, CareActions } from "./care-actions";
 import { statusLabel } from "@/lib/format";
@@ -179,14 +185,10 @@ export async function ExtendedPage({
                   ))}
                 </ol>
                 {data.nextActivityId && (
-                  <div className="pagination">
-                    <Link
-                      className="button secondary"
-                      href={`/admin/${kind}/${id}?before=${data.nextActivityId}`}
-                    >
-                      Older activity →
-                    </Link>
-                  </div>
+                  <Pagination
+                    nextHref={`/admin/${kind}/${id}?before=${data.nextActivityId}`}
+                    nextLabel="Older activity →"
+                  />
                 )}
               </Panel>
             </div>
@@ -222,37 +224,29 @@ export async function ExtendedPage({
               : "Restricted incident records. Trip completion does not resolve an incident."
           }
         >
-          <Link className="button primary" href={`/admin/${kind}/new`}>
+          <LinkButton variant="primary" href={`/admin/${kind}/new`}>
             New record
-          </Link>
+          </LinkButton>
         </PageHeader>
         <Notice>
           {kind === "safety"
             ? "Super_admin access only. Customer intake and emergency response promises remain pending a staff response policy."
             : "Internal staff workflow. Customer reply delivery, attachments, and response SLAs are not configured."}
         </Notice>
-        <form className="report-filters" action={`/admin/${kind}`}>
-          <label className="form-label">
-            State
-            <select name="status" defaultValue={value(search, "status") ?? ""}>
-              <option value="">All states</option>
-              {(kind === "support"
-                ? [
-                    "new",
-                    "assigned",
-                    "waiting_customer",
-                    "waiting_internal",
-                    "resolved",
-                    "reopened",
-                  ]
-                : ["open", "acknowledged", "responding", "resolved", "reviewed"]
-              ).map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
-          </label>
-          <button className="button secondary">Apply</button>
-        </form>
+        <DirectoryFilters
+          preview={preview}
+          statuses={(kind === "support"
+            ? [
+                "new",
+                "assigned",
+                "waiting_customer",
+                "waiting_internal",
+                "resolved",
+                "reopened",
+              ]
+            : ["open", "acknowledged", "responding", "resolved", "reviewed"]
+          ).map((value) => ({ value, label: statusLabel(value) }))}
+        />
         <DirectoryTable
           preview={preview}
           headers={["Subject", "State", "Severity", "Assigned", "Created"]}
@@ -528,14 +522,28 @@ export async function ExtendedPage({
     type Team = {
       items: { id: string; name: string; role: string; active: boolean }[];
       coverage: string;
+      nextCursor: string | null;
     };
-    const data = preview ? null : await adminRead<Team>("team");
+    const qs = new URLSearchParams();
+    for (const key of ["id", "status", "cursor"])
+      if (value(search, key)) qs.set(key, value(search, key)!);
+    const data = preview ? null : await adminRead<Team>(`team?${qs}`);
     return (
       <>
         <PageHeader
           eyebrow="SYSTEM"
           title="Team access"
           description="Existing staff accounts and current platform roles."
+        />
+        <DirectoryFilters
+          preview={preview}
+          searchLabel="Exact staff ID"
+          statusLabel="Role"
+          allLabel="All staff roles"
+          statuses={[
+            { value: "admin", label: "Admin" },
+            { value: "super_admin", label: "Super admin" },
+          ]}
         />
         <Notice>
           {data?.coverage ??
@@ -544,6 +552,12 @@ export async function ExtendedPage({
         {data ? (
           <DirectoryTable
             preview={false}
+            rowKeys={data.items.map((row) => row.id)}
+            nextHref={
+              data.nextCursor
+                ? `/admin/team?${new URLSearchParams({ ...Object.fromEntries(qs), cursor: data.nextCursor })}`
+                : undefined
+            }
             headers={["Staff", "ID", "Role", "Account"]}
             rows={data.items.map((r) => [
               r.name,
@@ -617,7 +631,7 @@ export async function ExtendedPage({
       createdAt: string;
     };
     const qs = new URLSearchParams();
-    for (const k of ["cursor", "service"])
+    for (const k of ["cursor", "service", "id"])
       if (value(search, k)) qs.set(k, value(search, k)!);
     const data = preview
       ? { items: [] as Rating[], nextCursor: null }
@@ -629,20 +643,32 @@ export async function ExtendedPage({
           title="Ratings & feedback"
           description="Recorded trip feedback. Feedback changes do not overwrite historical ratings."
         />
-        <form className="report-filters" action="/admin/ratings">
-          <label className="form-label">
+        <FilterForm action="/admin/ratings">
+          <FormField label="Exact rating ID">
+            <SearchField
+              label="Exact rating ID"
+              name="id"
+              defaultValue={value(search, "id") ?? ""}
+              placeholder="Rating UUID…"
+              pattern={preview ? undefined : "[0-9a-fA-F-]{36}"}
+            />
+          </FormField>
+          <FormField>
             Service
-            <select
+            <Dropdown
+              aria-label="Rating service"
               name="service"
               defaultValue={value(search, "service") ?? ""}
             >
               <option value="">All services</option>
               <option value="ride">Passenger rides</option>
               <option value="courier">Courier</option>
-            </select>
-          </label>
-          <button className="button secondary">Apply</button>
-        </form>
+            </Dropdown>
+          </FormField>
+          <Button type="submit" variant="secondary">
+            Apply
+          </Button>
+        </FilterForm>
         <DirectoryTable
           preview={preview}
           headers={[
@@ -743,25 +769,31 @@ export async function ExtendedPage({
           )}
         </PageHeader>
         <Panel title="Report scope">
-          <form className="report-filters" action="/admin/reports">
-            <label className="form-label">
+          <FilterForm action="/admin/reports">
+            <FormField>
               Start · WAT
               <input type="date" name="from" defaultValue={fromDate} required />
-            </label>
-            <label className="form-label">
+            </FormField>
+            <FormField>
               End · WAT (exclusive)
               <input type="date" name="to" defaultValue={toDate} required />
-            </label>
-            <label className="form-label">
+            </FormField>
+            <FormField>
               Service
-              <select name="service" defaultValue={service}>
+              <Dropdown
+                aria-label="Report service"
+                name="service"
+                defaultValue={service}
+              >
                 <option value="">All</option>
                 <option value="ride">Passenger rides</option>
                 <option value="courier">Courier</option>
-              </select>
-            </label>
-            <button className="button primary">Run report</button>
-          </form>
+              </Dropdown>
+            </FormField>
+            <Button type="submit" variant="primary">
+              Run report
+            </Button>
+          </FilterForm>
         </Panel>
         <Notice>
           Outcomes use request time. Settled fare uses completion or return
