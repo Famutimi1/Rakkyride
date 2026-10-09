@@ -19,14 +19,12 @@ export function DataTable({
   label = "Records",
   emptyTitle = "No records found",
   emptyMessage = "There are no records for the current query.",
-  mobile = "cards",
 }: {
   columns: readonly TableColumn[];
   rows: readonly TableRow[];
   label?: string;
   emptyTitle?: string;
   emptyMessage?: string;
-  mobile?: "cards" | "scroll";
 }) {
   const dense = useUiStore((state) => state.dense);
   if (!rows.length)
@@ -35,17 +33,10 @@ export function DataTable({
     );
   return (
     <>
-      <div className="table-mobile-controls">
-        {columns
-          .filter((column) => typeof column.label !== "string")
-          .map((column) => (
-            <span key={column.id}>{column.label}</span>
-          ))}
-      </div>
       <div
-        className={`table-scroll data-table data-table-${mobile}`}
+        className="table-scroll data-table data-table-scroll"
         role="region"
-        aria-label={`${label}, ${mobile === "cards" ? "cards on mobile; scroll horizontally on desktop" : "scroll horizontally for all columns"}`}
+        aria-label={`${label}, scroll horizontally for all columns`}
         tabIndex={0}
       >
         <table className={dense ? "dense" : ""}>

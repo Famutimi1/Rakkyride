@@ -11,7 +11,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://127.0.0.1:3015/admin. Port 3015 avoids the existing service on 3001. The current local `.env.local` opts into development preview. Set `DASHBOARD_PREVIEW=false` to use existing staff accounts through `/login`. Preview cannot call operational APIs and is rejected in production. No staff account is automatically provisioned.
+Open http://127.0.0.1:3015/admin. Port 3015 avoids the existing service on 3001. The current local `.env.local` uses `DASHBOARD_PREVIEW=false`, so pages require staff login and read the shared backend. Preview is an optional development-only layout mode, cannot call operational APIs and is rejected in production. No staff account is automatically provisioned. See [local backend setup and page connections](docs/local-backend.md).
 
 The shared backend should run on port 4000 using its existing PostgreSQL and Redis configuration. Migration 010 is approved, tested in disposable schemas, and applied to the local development database; migrations 001–009 were already recorded. Before deploying another environment, inspect its migration history and use the backend's normal migration procedure. No production deployment was performed.
 
@@ -39,7 +39,7 @@ Private driver documents use the existing local private upload directory, signat
 
 ## Shared UI and mobile review
 
-Use the reusable dropdown, search field, filter form, table, pagination, buttons and dialog in `src/components/ui`. Tables become labeled cards on phones, and the same semantic token set serves Light/Dark themes. See [component guide](docs/components.md), [mobile review](docs/mobile-review.md) and [search API](docs/search-api.md).
+Use the reusable dropdown, search field, filter form, table, pagination, buttons and dialog in `src/components/ui`. Tables keep desktop columns and headings on phones and scroll horizontally within their container. The same semantic token set serves Light/Dark themes. See [component guide](docs/components.md), [mobile review](docs/mobile-review.md) and [search API](docs/search-api.md).
 
 Staff record search is integrated with the existing backend through cookie-authenticated POST requests. Search text stays out of URLs and audit logs; contacts remain masked, results are bounded/paginated, and safety requires super_admin. Record directories use numbered API pages with exact filtered totals, a Rows selector, Previous/Next and shared expandable filters with Clear. Legacy API cursors remain supported. Preview search is fictional and local only.
 

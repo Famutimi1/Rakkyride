@@ -1,5 +1,15 @@
 # Mobile review — 09 October 2026
 
+## Current table behavior
+
+The desktop table layout now remains in place on phones. Column headings stay visible, rows keep their column alignment, and only the table container scrolls horizontally. The card behavior described in the earlier review below has been superseded.
+
+All 21 navigation pages were opened individually again at 390px and 320px, with More filters expanded where available. All 42 page/control overflow checks passed. Every populated table retained `display: table` and `table-header-group` headings. Measurements are in `scrolling-table-review.json`. Keyboard ArrowRight scrolling moved the rider table within its container; the 390px viewport stayed 390px wide while the table content extended to 661px. Screenshot: `screenshots/mobile-scrolling-table.png`.
+
+This layout review temporarily used fictional development preview records. `DASHBOARD_PREVIEW=false` was restored afterward. Protected real-database browser checks await the owner's initial staff account selection; no role or financial record was changed by these UI checks.
+
+## Earlier responsive review
+
 All 21 navigation pages and nine reachable detail/creation pages were opened individually at 390×844 and 320×740. For every page, document width matched viewport width and no main content extended outside the viewport. Measurements are saved in `mobile-review.json`; screenshots are in `screenshots/mobile`.
 
 Main pages: Overview, Live operations, All trips, Scheduled rides, Courier deliveries, Riders & customers, Drivers, Applications, Payments, Wallets & ledger, Withdrawals, Reconciliation, Support cases, Safety incidents, Ratings & feedback, Reports, Pricing, Payment settings, Audit log, Service health, Team access.
