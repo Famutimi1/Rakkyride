@@ -11,6 +11,9 @@ export function ThemeProvider() {
       useUiStore.setState({
         dense: localStorage.getItem("rakky-density") === "true",
       });
+      const sidebar = localStorage.getItem("rakky-sidebar-collapsed");
+      if (sidebar === "true" || sidebar === "false")
+        useUiStore.setState({ sidebarCollapsed: sidebar === "true" });
     } catch {}
   }, []);
   useEffect(() => {

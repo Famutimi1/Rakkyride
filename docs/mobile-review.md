@@ -1,5 +1,11 @@
 # Mobile review — 09 October 2026
 
+## Sidebar follow-up — 10 October 2026
+
+The desktop/tablet header now includes a collapse/expand sidebar button beside the breadcrumb. Browser checks on the authenticated local dashboard covered both states at 1440px, 1061px and 768px, plus the phone drawer at 390px. The rail measured 72px and the expanded menu 240px; document widths matched the tested viewports. Enter and Space toggled the control, accessible labels updated, and the collapsed preference survived navigation to Riders & customers and a reload. The small-tablet header uses an icon search control to keep the toggle and breadcrumb visible.
+
+At 390px, the desktop toggle was hidden and the drawer retained labeled links even with a saved collapsed preference. Opening it locked background scrolling; Escape closed it, restored scrolling and returned focus to the menu opener. The original viewport was restored after testing. Screenshots: `screenshots/sidebar-expanded-desktop.png`, `screenshots/sidebar-collapsed-desktop.png`, and `screenshots/sidebar-expanded-tablet.png`. These were read-only UI checks; no database records were changed.
+
 ## Current table behavior
 
 The desktop table layout now remains in place on phones. Column headings stay visible, rows keep their column alignment, and only the table container scrolls horizontally. The card behavior described in the earlier review below has been superseded.

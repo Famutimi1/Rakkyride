@@ -29,19 +29,36 @@ export function AdminShell({
   previewRecords?: StaffSearchHit[];
 }) {
   const pathname = usePathname();
-  const { theme, setTheme, menuOpen, setMenuOpen } = useUiStore();
+  const {
+    theme,
+    setTheme,
+    menuOpen,
+    setMenuOpen,
+    sidebarCollapsed,
+    setSidebarCollapsed,
+  } = useUiStore();
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchMode, setSearchMode] = useState<"pages" | "records">("pages");
   const [mobile, setMobile] = useState(false);
+  const [compactDefault, setCompactDefault] = useState(false);
+  const collapsed = sidebarCollapsed ?? compactDefault;
   const sidebar = useRef<HTMLElement>(null);
   const navTrigger = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    const media = matchMedia("(max-width:1023px)");
-    const changed = () => setMobile(media.matches);
+    const media = matchMedia("(max-width:767px)");
+    const compact = matchMedia("(max-width:1279px)");
+    const changed = () => {
+      setMobile(media.matches);
+      setCompactDefault(compact.matches);
+    };
     changed();
     media.addEventListener("change", changed);
-    return () => media.removeEventListener("change", changed);
+    compact.addEventListener("change", changed);
+    return () => {
+      media.removeEventListener("change", changed);
+      compact.removeEventListener("change", changed);
+    };
   }, []);
   useEffect(() => {
     if (!mobile || !menuOpen) return;
@@ -97,11 +114,20 @@ export function AdminShell({
     .flatMap((g) => g.items)
     .filter(([name]) => name.toLowerCase().includes(search.toLowerCase()));
   return (
-    <div className="app-shell">
+    <div
+      className={`app-shell ${collapsed ? "sidebar-is-collapsed" : ""}`}
+      data-sidebar={
+        sidebarCollapsed === null
+          ? "auto"
+          : collapsed
+            ? "collapsed"
+            : "expanded"
+      }
+    >
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      {menuOpen && (
+      {mobile && menuOpen && (
         <button
           className="nav-backdrop"
           aria-label="Close navigation"
@@ -109,6 +135,7 @@ export function AdminShell({
         />
       )}
       <aside
+        id="dashboard-sidebar"
         ref={sidebar}
         inert={mobile && !menuOpen}
         role={mobile ? "dialog" : undefined}
@@ -142,6 +169,7 @@ export function AdminShell({
                   key={href}
                   href={href}
                   title={label}
+                  aria-label={label}
                   aria-current={pathname === href ? "page" : undefined}
                   className={`nav-item ${pathname === href || (href !== "/admin" && pathname.startsWith(href + "/")) ? "active" : ""}`}
                 >
@@ -180,10 +208,22 @@ export function AdminShell({
         <header className="topbar">
           <div className="breadcrumb">
             <button
+              type="button"
+              className="icon-button sidebar-toggle"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-expanded={!collapsed}
+              aria-controls="dashboard-sidebar"
+              onClick={() => setSidebarCollapsed(!collapsed)}
+            >
+              <Icon name={collapsed ? "sidebar-expand" : "sidebar-collapse"} />
+            </button>
+            <button
               ref={navTrigger}
               className="icon-button menu-button"
               aria-label="Open navigation"
               aria-expanded={menuOpen}
+              aria-controls="dashboard-sidebar"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               <Icon name="menu" />

@@ -15,6 +15,8 @@ Common controls live in `src/components/ui`. Use these components when adding pa
 
 Existing shared `Panel`, `PageHeader`, `Notice`, `QueryState`, `StatusBadge`, `MoneyValue`, `Timestamp`, `DefinitionList`, `CopyButton` and `ConfirmAction` remain the standard presentation primitives. Preserve exact kobo strings, WAT timestamps and status meanings when reusing them.
 
+`AdminShell` owns the shared navigation. Its top-bar sidebar button switches between a labeled 240px menu and a 72px icon rail on desktop/tablet (768px and above). Accessible link names and native title tooltips remain available in the rail. The choice is saved by the UI store under `rakky-sidebar-collapsed`; before a choice, widths below 1280px default to the rail. Phones retain the full labeled drawer, background scroll lock, focus containment and Escape dismissal. Keep page navigation inside this shell so the same preference applies everywhere.
+
 ```tsx
 <FilterForm onSubmit={submitFilters}>
   <FormField label="Reference">

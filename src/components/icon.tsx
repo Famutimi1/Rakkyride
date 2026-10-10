@@ -25,6 +25,8 @@ const paths: Record<string, string> = {
   close: "M6 6l12 12 M6 18 18 6",
   chevron: "m6 9 6 6 6-6",
   menu: "M3 6h18 M3 12h18 M3 18h18",
+  "sidebar-collapse": "M3 3h18v18H3z M9 3v18 M16 8l-4 4 4 4",
+  "sidebar-expand": "M3 3h18v18H3z M9 3v18 M13 8l4 4-4 4",
 };
 export function Icon({
   name,
