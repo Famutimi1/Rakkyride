@@ -2024,6 +2024,20 @@ textarea {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+.table-actions {
+  min-width: 150px;
+}
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 130px;
+}
+.row-actions > .button {
+  white-space: nowrap;
+  min-height: 44px;
+}
 .table-cell-content > small {
   display: block;
   color: var(--textMuted);

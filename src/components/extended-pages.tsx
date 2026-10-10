@@ -5,7 +5,9 @@ import { FilterForm, FormField } from "./ui/filter-toolbar";
 import { Dropdown } from "./ui/dropdown";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { adminRead } from "@/lib/server";
+import { adminRead, requireStaff } from "@/lib/server";
+import { PricingEditor, type FareSettings } from "./record-editors";
+import { RowActions } from "./ui/row-actions";
 import {
   PageHeader,
   Panel,
@@ -605,16 +607,8 @@ export async function ExtendedPage({
     );
   }
   if (section === "pricing") {
-    type Fare = {
-      vehicleType: string;
-      baseFareKobo: string;
-      perKmKobo: string;
-      perMinuteKobo: string;
-      minimumFareKobo: string;
-      commissionBps: number;
-      active: boolean;
-      updatedAt: string;
-    };
+    type Fare = FareSettings;
+    const staff = preview ? null : await requireStaff();
     const data = preview
       ? { items: [] as Fare[] }
       : await adminRead<{ items: Fare[] }>("pricing");
@@ -623,10 +617,19 @@ export async function ExtendedPage({
         <PageHeader
           eyebrow="CONFIGURATION"
           title="Pricing"
-          description="Current fare configuration, NGN. Read-only until commercial change controls are approved."
+          description="Fare configuration in NGN. Super admins can update rates, commission and service availability."
         />
         <DirectoryTable
           preview={preview}
+          actions={
+            staff?.platformRole === "super_admin"
+              ? data.items.map((fare) => (
+                  <RowActions>
+                    <PricingEditor key={fare.version} fare={fare} />
+                  </RowActions>
+                ))
+              : undefined
+          }
           headers={[
             "Vehicle",
             "Base",

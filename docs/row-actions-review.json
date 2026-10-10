@@ -1,0 +1,509 @@
+{
+  "checkedAt": "2026-10-10T08:17:06.271Z",
+  "reviews": [
+    {
+      "page": "/admin",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Operations overview",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 20,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/live",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Live operations",
+      "tables": [],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/trips",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "All trips",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 20,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/scheduled",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Scheduled rides",
+      "tables": [],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/courier",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Courier deliveries",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 3,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/riders",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Riders & customers",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 3,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/drivers",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Drivers",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 3,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/applications",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Driver applications",
+      "tables": [],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/payments",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Payments",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 20,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/ledger",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Wallets & ledger",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 13,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/withdrawals",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Withdrawals",
+      "tables": [],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/reconciliation",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Reconciliation",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 4,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/support",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Support cases",
+      "tables": [],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/safety",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Safety incidents",
+      "tables": [],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/ratings",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Ratings & feedback",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 2,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/reports",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Reports",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 5,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/pricing",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Pricing",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 2,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/settings/payments",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Payment settings",
+      "tables": [],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/audit",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Audit log",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 18,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/health",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Service health",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 7,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin/team",
+      "width": 390,
+      "documentWidth": 390,
+      "heading": "Team access",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 1,
+          "scrollable": true
+        }
+      ],
+      "viewport": 390
+    },
+    {
+      "page": "/admin",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Operations overview",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 20,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/live",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Live operations",
+      "tables": [],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/trips",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "All trips",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 20,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/scheduled",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Scheduled rides",
+      "tables": [],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/courier",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Courier deliveries",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 3,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/riders",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Riders & customers",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 3,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/drivers",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Drivers",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 3,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/applications",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Driver applications",
+      "tables": [],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/payments",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Payments",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 20,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/ledger",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Wallets & ledger",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 13,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/withdrawals",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Withdrawals",
+      "tables": [],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/reconciliation",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Reconciliation",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 4,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/support",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Support cases",
+      "tables": [],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/safety",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Safety incidents",
+      "tables": [],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/ratings",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Ratings & feedback",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 2,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/reports",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Reports",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 5,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/pricing",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Pricing",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 2,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/settings/payments",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Payment settings",
+      "tables": [],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/audit",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Audit log",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 20,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/health",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Service health",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 7,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    },
+    {
+      "page": "/admin/team",
+      "width": 320,
+      "documentWidth": 320,
+      "heading": "Team access",
+      "tables": [
+        {
+          "actions": true,
+          "rows": 1,
+          "scrollable": true
+        }
+      ],
+      "viewport": 320
+    }
+  ]
+}

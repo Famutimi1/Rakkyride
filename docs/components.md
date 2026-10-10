@@ -35,3 +35,7 @@ Existing shared `Panel`, `PageHeader`, `Notice`, `QueryState`, `StatusBadge`, `M
 ```
 
 Accessibility reference: [WAI-ARIA select-only combobox pattern](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/). Keyboard, focus, form submission, mobile bounds and both token themes were exercised in browser preview; see `mobile-review.md`.
+
+`DataTable` always renders a separate Actions column. A row can provide its `actions` slot; otherwise `InspectRow` opens an accessible detail dialog. `DirectoryTable` promotes the primary admin record link to an explicit action (view, application review, case management or account controls), and accepts an `actions` array aligned with the full unpaged rows. The client slices actions with the same pagination offset as cells. Never fabricate a mutation for immutable audit, rating, financial-history or aggregate rows.
+
+`RowActions` keeps links and controls together with 44px targets, inside the scrolling table on mobile. `PersonEditor`, `PricingEditor` and `ScheduleEditor` compose shared fields/dropdowns/dialogs and `ConfirmAction`. Their parent server pages expose writes only to super_admin; Express checks the role again. `PaymentSettingsEditor` supports all existing limits/controls plus adding/removing bounded fee tiers, while retaining the required final unbounded tier.

@@ -2,7 +2,7 @@
 
 ## Approved and implemented
 
-Separate Next frontend; one existing Express backend; current schema/status baseline; domain-owned admin services; existing staff OTP accounts; HttpOnly browser sessions; support/safety/activity records; audit expansion and immutability; official Socket.io Redis adapter. Migration 010 is applied to local development PostgreSQL, with no production deployment.
+Separate Next frontend; one existing Express backend; current schema/status baseline; domain-owned admin services; existing staff OTP accounts; HttpOnly browser sessions; support/safety/activity records; audit expansion and immutability; official Socket.io Redis adapter. Migration 010 is applied to local development PostgreSQL, with no production deployment. The owner subsequently requested super-admin configuration editing and table actions; payment settings, pricing, customer name/status, and pre-dispatch scheduled cancellation/rescheduling are implemented with audit, version and retry controls.
 
 ## Configuration needed for verification
 
@@ -14,7 +14,7 @@ Choose initial owner provisioning, permitted operations/support/finance/safety s
 
 ## Commercial and money authority
 
-Approve actual payment limits/fees, cash-debt policy, adjustment threshold, wallet-credit refund authority and any independent approval requirement. Dashboard money and settings flags remain off. The super-admin settings editor is built with a before/after confirmation, optimistic configuration version and exact-payload retry checks; enabling it requires the commercial/privileged rollout decision. Accounting sweeps need evidence and duplicate-movement policy. Provider refunds are separate scope.
+Approve actual payment limits/fees, cash-debt policy, adjustment threshold, wallet-credit refund authority and any independent approval requirement. The money-action flag remains off. Configuration editing is enabled for super_admin at the owner's request, with before/after confirmation, optimistic versions and exact-payload retry checks. Confirm production commercial values before rollout; no live setting was changed by this implementation. Accounting sweeps need evidence and duplicate-movement policy. Provider refunds are separate scope.
 
 Returned-courier refund eligibility, lost parcel escalation and exhausted handoff-code recovery need approved policies. Current returned fares remain distinct from delivered parcels; no surcharge or recovery override is invented.
 
@@ -24,7 +24,7 @@ Name staff owners, operating hours, severity/escalation rules, response SLAs, cu
 
 ## Documents and interventions
 
-Choose shared durable private-document storage for multiple backend instances and any document expiry/verification model. Local private serving is protected and audited but is not shared storage. Choose staff cancellation/reassignment powers and actor attribution, plus account/driver restriction behavior during active rides/returns. Current participant state-machine actions are not repurposed as staff intervention APIs.
+Choose shared durable private-document storage for multiple backend instances and any document expiry/verification model. Local private serving is protected and audited but is not shared storage. Choose staff cancellation/reassignment powers and actor attribution, plus account/driver restriction behavior during active rides/returns. Pre-dispatch passenger schedules support audited super-admin rescheduling/cancellation; cancellation attributes the staff ID as a system action under the existing schema. Customer name/status edits cannot deactivate a scheduled/active trip account or change staff roles. Reassignment, active-ride cancellation and courier handoff overrides remain pending those operational powers.
 
 ## Telemetry and expansion
 

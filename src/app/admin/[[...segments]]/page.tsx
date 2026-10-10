@@ -33,6 +33,8 @@ import { DirectoryTable } from "@/components/directory-table";
 import { ApplicationReview } from "@/components/application-review";
 import { RefundAction, AccountActions } from "@/components/money-actions";
 import { LiveOperations } from "@/components/live-operations";
+import { PersonEditor, ScheduleEditor } from "@/components/record-editors";
+import { RowActions } from "@/components/ui/row-actions";
 import { CopyButton } from "@/components/copy-button";
 import { Icon } from "@/components/icon";
 import { money, statusLabel } from "@/lib/format";
@@ -157,6 +159,7 @@ async function RenderAdminPage({
   const section = segments[0] ?? "overview";
   const id = segments[1];
   const preview = previewEnabled();
+  const staff = preview ? null : await requireStaff();
   try {
     if (Array.isArray(search.page) || Array.isArray(search.limit))
       throw new RangeError("Repeated pagination fields");
@@ -759,6 +762,23 @@ async function RenderAdminPage({
                 ]}
               />
             </Panel>
+            {!preview &&
+              staff?.platformRole === "super_admin" &&
+              trip.status === "scheduled" &&
+                trip.service === "ride" &&
+              trip.scheduledAt &&
+              trip.version && (
+                <Panel title="Booking controls">
+                  <ScheduleEditor
+                    key={trip.version}
+                    trip={{
+                      id: trip.id,
+                      scheduledAt: trip.scheduledAt,
+                      version: trip.version,
+                    }}
+                  />
+                </Panel>
+              )}
             {trip.scheduledAt && (
               <Notice>
                 Pickup: <Timestamp value={trip.scheduledAt} />. Funds checked at
@@ -795,6 +815,14 @@ async function RenderAdminPage({
           description={person.id}
         >
           <StatusBadge status={person.active ? "active" : "inactive"} />
+          {staff?.platformRole === "super_admin" &&
+            person.version &&
+            !["admin", "super_admin"].includes(person.platformRole ?? "") && (
+              <PersonEditor
+                key={person.version}
+                person={{ ...person, version: person.version }}
+              />
+            )}
         </PageHeader>
         <div className="detail-grid">
           <Panel title="Profile">
@@ -853,6 +881,7 @@ async function RenderAdminPage({
         )}
         <Panel title="Linked trip history">
           <TripDirectory
+            canManageSchedules={staff?.platformRole === "super_admin"}
             preview={preview}
             showFilters={false}
             trips={history.items}
@@ -1015,6 +1044,7 @@ async function RenderAdminPage({
           href="/admin/trips"
         >
           <TripDirectory
+            canManageSchedules={staff?.platformRole === "super_admin"}
             preview={preview}
             showFilters={false}
             trips={tripPage.items}
@@ -1160,6 +1190,7 @@ async function RenderAdminPage({
           <LiveOperations initial={live!} preview={preview} />
         )}
         <TripDirectory
+          canManageSchedules={staff?.platformRole === "super_admin"}
           preview={preview}
           trips={data.items}
           nextCursor={data.nextCursor}
@@ -1237,6 +1268,31 @@ async function RenderAdminPage({
           }
         />
         <DirectoryTable
+          actions={data.items.map((person) => (
+            <RowActions
+              links={[
+                {
+                  href: `/admin/${section === "applications" ? "applications" : drivers ? "drivers" : "riders"}/${person.id}`,
+                  label:
+                    section === "applications"
+                      ? "Review application"
+                      : "View account",
+                },
+              ]}
+            >
+              {section !== "applications" &&
+                staff?.platformRole === "super_admin" &&
+                person.version &&
+                !["admin", "super_admin"].includes(
+                  person.platformRole ?? "",
+                ) && (
+                  <PersonEditor
+                    key={person.version}
+                    person={{ ...person, version: person.version }}
+                  />
+                )}
+            </RowActions>
+          ))}
           rowKeys={data.items.map((person) => person.id)}
           preview={preview}
           pagination={data.pagination}
@@ -1558,11 +1614,11 @@ async function RenderAdminPage({
         <PageHeader
           eyebrow="SYSTEM"
           title="Payment settings"
-          description="Read-only inspection of current payment configuration."
+          description="Manage payment limits, fees and payout controls. Super admin changes are versioned and audited."
         />
         <Notice>
-          Migration values are development placeholders. Commercial values and
-          edit safeguards require owner approval before live rollout.
+          Review changes before saving. Each update requires a reason and
+          rejects concurrent edits.
         </Notice>
         <Panel title="Limits and controls">
           {settings ? (
@@ -1602,7 +1658,7 @@ async function RenderAdminPage({
             <PaymentSettingsEditor
               key={settings.version}
               settings={settings}
-              enabled={process.env.ENABLE_ADMIN_SETTINGS_ACTIONS === "true"}
+              enabled={true}
             />
           </Panel>
         )}

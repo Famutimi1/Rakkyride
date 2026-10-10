@@ -19,6 +19,9 @@ const mutationRules = [
   /^payments\/(refunds|adjustments|settings)$/i,
   new RegExp(`^payments/accounts/${uuid}/freeze$`, "i"),
   new RegExp(`^driver-applications/${uuid}/review$`, "i"),
+  /^pricing\/[a-z][a-z0-9_]{0,19}$/,
+  new RegExp(`^users/${uuid}$`, "i"),
+  new RegExp(`^trips/${uuid}/schedule$`, "i"),
 ];
 const json = (value: unknown, status = 200) =>
   NextResponse.json(value, {
@@ -34,9 +37,14 @@ async function handle(
   const inspection = read || path === "search";
   if (!(read ? readRules : mutationRules).some((rule) => rule.test(path)))
     return json({ error: "This operation is unavailable." }, 404);
+  const patch =
+    path === "payments/settings" ||
+    path.startsWith("pricing/") ||
+    /^users\//.test(path);
   if (
-    (path === "payments/settings" && request.method !== "PATCH") ||
-    (path !== "payments/settings" && request.method === "PATCH")
+    !read &&
+    ((patch && request.method !== "PATCH") ||
+      (!patch && request.method === "PATCH"))
   )
     return json({ error: "Unsupported operation." }, 405);
   if (previewEnabled())
@@ -63,17 +71,6 @@ async function handle(
         403,
       );
   }
-  if (
-    path === "payments/settings" &&
-    process.env.ENABLE_ADMIN_SETTINGS_ACTIONS !== "true"
-  )
-    return json(
-      {
-        error:
-          "Configuration editing is disabled until owner rollout decisions are approved.",
-      },
-      403,
-    );
   const token = (await cookies()).get(cookieNames.access)?.value;
   if (!token)
     return json({ error: "Your session expired. Sign in again." }, 401);

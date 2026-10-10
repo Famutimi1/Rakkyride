@@ -13,6 +13,8 @@ import { statusLabel } from "@/lib/format";
 import { useUiStore } from "@/lib/ui-store";
 import { SearchField } from "./ui/search-field";
 import { DataTable } from "./ui/data-table";
+import { RowActions } from "./ui/row-actions";
+import { ScheduleEditor } from "./record-editors";
 import { Pagination } from "./ui/pagination";
 import { MoneyValue, StatusBadge, Timestamp } from "./primitives";
 export function TripDirectory({
@@ -22,12 +24,14 @@ export function TripDirectory({
   pagination,
   mode = "all",
   showFilters = true,
+  canManageSchedules = false,
 }: {
   trips: Trip[];
   preview: boolean;
   nextCursor?: string | null;
   pagination?: PaginationInfo;
   showFilters?: boolean;
+  canManageSchedules?: boolean;
   mode?: "all" | "live" | "scheduled" | "courier";
 }) {
   const params = useSearchParams(),
@@ -311,6 +315,27 @@ export function TripDirectory({
         ]}
         rows={rows.map((trip, index) => ({
           id: trip.id,
+          actions: (
+            <RowActions
+              links={[{ href: `/admin/trips/${trip.id}`, label: "View trip" }]}
+            >
+              {!preview &&
+                canManageSchedules &&
+                trip.status === "scheduled" &&
+                trip.service === "ride" &&
+                trip.scheduledAt &&
+                trip.version && (
+                  <ScheduleEditor
+                    key={trip.version}
+                    trip={{
+                      id: trip.id,
+                      scheduledAt: trip.scheduledAt,
+                      version: trip.version,
+                    }}
+                  />
+                )}
+            </RowActions>
+          ),
           group:
             mode === "scheduled" &&
             (index === 0 ||

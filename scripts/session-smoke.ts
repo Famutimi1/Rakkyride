@@ -11,6 +11,7 @@ async function body(req: IncomingMessage) {
   return raw ? (JSON.parse(raw) as Record<string, string>) : {};
 }
 const directoryRequests: string[] = [];
+const mutationRequests: {path: string; method: string; payload: object}[] = [];
 let receivedGoogleNonce = "";
 const mock = createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json");
@@ -157,6 +158,12 @@ const mock = createServer(async (req, res) => {
         limitPerGroup: 20,
       }),
     );
+    return;
+  }
+  if (["/api/admin/payments/settings", "/api/admin/pricing/economy", "/api/admin/users/00000000-0000-0000-0000-000000000001", "/api/admin/trips/00000000-0000-0000-0000-000000000001/schedule"].includes(req.url ?? "")) {
+    assert.equal(req.headers.authorization, "Bearer staff-test");
+    mutationRequests.push({path:req.url!,method:req.method!,payload:await body(req)});
+    res.end(JSON.stringify({auditId:"local-audit-test"}));
     return;
   }
   if (req.url === "/api/auth/logout") {
@@ -318,6 +325,23 @@ try {
     "search text cannot be sent by GET",
   );
   assert.equal((await post("refresh", {}, base, cookieHeader)).status, 200);
+  const editRoutes = [
+    ["payments/settings", "PATCH"], ["pricing/economy", "PATCH"],
+    ["users/00000000-0000-0000-0000-000000000001", "PATCH"],
+    ["trips/00000000-0000-0000-0000-000000000001/schedule", "POST"],
+  ] as const;
+  for (const [path, method] of editRoutes) {
+    const payload = {reason:"Local transport verification",requestKey:"00000000-0000-0000-0000-000000000002",expectedVersion:"local-version"};
+    const edit = (origin:string, cookie = cookieHeader, verb:string = method) => fetch(`${base}/api/admin/${path}`, {
+      method:verb, headers:{"Content-Type":"application/json",Origin:origin,Cookie:cookie},body:JSON.stringify(payload),
+    });
+    assert.equal((await edit("https://other.invalid")).status,403);
+    assert.equal((await edit(base, "")).status,401);
+    assert.equal((await edit(base,cookieHeader,method === "PATCH" ? "POST" : "PATCH")).status,405);
+    assert.equal((await edit(base)).status,200, `authorized ${path} reaches backend without obsolete settings gate`);
+    assert.deepEqual(mutationRequests.at(-1),{path:`/api/admin/${path}`,method,payload});
+  }
+  assert.equal(mutationRequests.length,editRoutes.length,"rejected requests never reach backend");
   const loggedOut = await post("logout", {}, base, cookieHeader);
   assert.equal(loggedOut.status, 200);
   assert.ok(
@@ -397,7 +421,7 @@ try {
     401,
   );
   console.log(
-    "PASS: production fixture isolation, route guard, CSRF rejection, nonstaff rejection, secure cookies, token redaction, refresh, logout, body-only authenticated record search, server-rendered API pagination, filtered query forwarding and Google browser challenge/staff session checks.",
+    "PASS: production fixture isolation, route guard, CSRF rejection, nonstaff rejection, secure cookies, token redaction, refresh, logout, body-only authenticated record search, server-rendered API pagination, filtered query forwarding Google browser challenge/staff session checks, and authenticated configuration/profile/schedule mutations with CSRF and method guards.",
   );
 } finally {
   child.kill("SIGTERM");

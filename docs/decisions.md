@@ -10,7 +10,7 @@ Cases/incidents are internal staff intake. No external message channel, customer
 
 Canonical mobile theme exports generate CSS semantic variables with a checksum. The same source logo and Inter font assets are used. No UI kit, ORM, clustering dependency or additional infrastructure was added. Existing dependencies morgan, proxy-addr and qs received compatible security updates; the backend package audit reports no vulnerabilities.
 
-Development fixtures are explicit and opt-in; production refuses fixture mode. Real reads require backend staff authorization. Wallet mutations and configuration editing are separately gated off in the dashboard. Sweeps, provider refunds, manual payout approval, arbitrary trip state changes, pricing writes and public staff role editing are not provided.
+Development fixtures are explicit and opt-in; production refuses fixture mode. Real reads require backend staff authorization. Wallet mutations are gated off in the dashboard. Configuration editing is available to super_admin with audited confirmation and concurrency control at the owner's request. Sweeps, provider refunds, manual payout approval, arbitrary trip state changes and public staff role editing are not provided.
 
 The API/type inventory was committed before page implementation and is now updated to distinguish implemented routes and gated actions. Backend route handlers remain HTTP-only; services own business logic and use raw parameterized PostgreSQL queries and existing Redis.
 

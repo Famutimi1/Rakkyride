@@ -39,8 +39,8 @@ All API paths below have the backend prefix `/api/admin`:
 - Safety incidents `/admin/safety`: corresponding `/safety` endpoints, super_admin only.
 - Ratings & feedback `/admin/ratings`: `/ratings`.
 - Reports `/admin/reports`: `/reports` and aggregate CSV `/reports/export` with the same range/service.
-- Pricing `/admin/pricing`: `/pricing`, read-only existing fare configuration.
-- Payment settings `/admin/settings/payments`: `/payments/settings`, read-only while editing policy is disabled.
+- Pricing `/admin/pricing`: `/pricing`, existing fare configuration with audited super-admin updates.
+- Payment settings `/admin/settings/payments`: `/payments/settings`, all existing configuration fields editable by super admins with version checks and a reason.
 - Audit log `/admin/audit`: `/audit`, with role-filtered exact paging.
 - Service health `/admin/health`: `/health`, bounded PostgreSQL/Redis observations.
 - Team access `/admin/team`: `/team`, read-only super_admin directory.
@@ -54,4 +54,4 @@ Every table uses the shared `DataTable`: desktop headings and columns remain vis
 
 The complete [admin API reference](/Users/mac/Desktop/ride_app/backend/docs/admin-api-reference.md) covers inputs, responses, roles, examples and pagination. Its [implementation snapshot](/Users/mac/Desktop/ride_app/backend/docs/admin-api-implementation.md) includes the actual backend TypeScript code with source checksums.
 
-Support, safety and withdrawal tables were empty during initial inspection; showing no records is correct. Maps need browser-restricted Google keys. Worker/provider observations without instrumentation remain unknown. Financial and settings mutation UI gates remain off pending the previously documented policies. No production rollout, invented provider outcome or real financial test transaction is implied by the local connection.
+Support, safety and withdrawal tables were empty during initial inspection; showing no records is correct. Maps need browser-restricted Google keys. Worker/provider observations without instrumentation remain unknown. Financial mutation UI gates remain off pending the previously documented policies. Configuration updates are enabled for super admins. No production rollout, invented provider outcome or real financial test transaction is implied by the local connection.

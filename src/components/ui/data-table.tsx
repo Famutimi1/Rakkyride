@@ -2,6 +2,7 @@
 import { Fragment, type ReactNode } from "react";
 import { useUiStore } from "@/lib/ui-store";
 import { QueryState } from "../primitives";
+import { InspectRow } from "./row-actions";
 export interface TableColumn {
   id: string;
   label: ReactNode;
@@ -12,6 +13,7 @@ export interface TableRow {
   id: string | number;
   cells: ReactNode[];
   group?: ReactNode;
+  actions?: ReactNode;
 }
 export function DataTable({
   columns,
@@ -51,6 +53,9 @@ export function DataTable({
                   {column.label}
                 </th>
               ))}
+              <th scope="col" className="table-actions">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -58,7 +63,7 @@ export function DataTable({
               <Fragment key={row.id}>
                 {row.group && (
                   <tr className="agenda-date">
-                    <th colSpan={columns.length} scope="rowgroup">
+                    <th colSpan={columns.length + 1} scope="rowgroup">
                       {row.group}
                     </th>
                   </tr>
@@ -80,6 +85,11 @@ export function DataTable({
                       <div className="table-cell-content">{cell}</div>
                     </td>
                   ))}
+                  <td data-label="Actions" className="table-actions">
+                    {row.actions ?? (
+                      <InspectRow columns={columns} cells={row.cells} />
+                    )}
+                  </td>
                 </tr>
               </Fragment>
             ))}

@@ -13,6 +13,7 @@ export function DirectoryTableClient({
   preview,
   rowKeys,
   pagination,
+  actions,
   noun = "records",
 }: {
   headers: string[];
@@ -21,6 +22,7 @@ export function DirectoryTableClient({
   preview: boolean;
   rowKeys?: readonly (string | number)[];
   pagination?: PaginationInfo;
+  actions?: ReactNode[];
   noun?: string;
 }) {
   const [localPage, setLocalPage] = useState(1),
@@ -55,6 +57,7 @@ export function DirectoryTableClient({
         columns={headers.map((label, index) => ({ id: String(index), label }))}
         rows={visible.map((cells, index) => ({
           id: rowKeys?.[index + offset] ?? index + offset,
+          actions: actions?.[index + offset],
           cells: cells.map((cell, column) => (
             <Fragment key={column}>{cell}</Fragment>
           )),

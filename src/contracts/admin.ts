@@ -51,6 +51,7 @@ export interface SampledPositions {
   limit: number;
 }
 export interface Trip {
+  version?: string;
   currentPosition?: TripPosition;
   sampledPositions?: SampledPositions;
   pickupLat?: number;
@@ -114,6 +115,8 @@ export interface Trip {
   allowedActions: readonly string[];
 }
 export interface Person {
+  platformRole?: string;
+  version?: string;
   accounts?: {
     id: string;
     kind: string;

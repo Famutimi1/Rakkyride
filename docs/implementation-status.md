@@ -18,7 +18,7 @@ This records the state of the source specification, including material gaps. Imp
 - ADM-15: super_admin-only internal safety creation, ownership, next action and guarded open/acknowledged/responding/resolved/reviewed lifecycle. Sensitive reads audited, safety audit hidden from ordinary admins. Customer SOS intake, evidence, contact reveal and named response policy remain pending.
 - ADM-16: paginated ratings/feedback and service filter, linked trip investigation and sample counts. Escalation is via care records; moderation writes and statistical quality rankings are not invented.
 - ADM-17: bounded date/service reports and audited aggregate CSV with the same range/filter scope. Request cohort, fulfilled value and ledger posting time remain separate; returned parcels are separate from delivered. Ledger service scope is explicitly all services. No visible-page-only complete export claim. Row exports, long jobs and retained cohort/geographic analytics are pending.
-- ADM-18: complete payment settings inspection and gated super-admin editor with before/after, version and retry checks; pricing read-only; team existing roles read-only; protected paginated audit and actual PostgreSQL/Redis point checks. Staff grants/revocation tooling, step-up, effective-date pricing and worker/provider/reconciliation telemetry remain pending.
+- ADM-18: complete payment settings inspection and enabled super-admin editor with before/after, version and retry checks; all fare configuration fields editable with the same protections; team existing roles read-only; protected paginated audit and actual PostgreSQL/Redis point checks. Staff grants/revocation tooling, step-up, effective-date pricing and worker/provider/reconciliation telemetry remain pending.
 
 ## Verification evidence
 
@@ -39,3 +39,9 @@ Record directories now use a shared collapsed search toolbar with More filters /
 ## Rollout gates
 
 The remaining decisions document identifies actual owner/configuration blockers. No production deployment, commercial approval, emergency-response promise or complete full-system audit coverage is claimed. P2 growth features remain out of scope until separately approved, as required by the source specification.
+
+## Table actions and configuration editing · 10 October 2026
+
+Every shared table includes an Actions column. Linked records expose their detail/review/manage workflow; aggregate and immutable history rows expose a detail dialog. Customer rows add super-admin name/status editing, and scheduled passenger rides add reschedule/cancel controls before dispatch. These mutations use the shared Express backend, exact versions, reasoned audits and stable retry keys. Pricing and all 11 payment settings fields are editable by super admins. Ledger postings, audits, staff grants and provider credentials are preserved.
+
+All 21 main pages were checked at both 390px and 320px with real database data: no document overflow; every populated table has Actions and scrolls horizontally. Mobile account/pricing editors and settings review dialogs were checked without saving live changes. Empty local queues remain empty. See `row-actions-review.json` and `row-actions-and-settings.md`.

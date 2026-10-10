@@ -1,6 +1,7 @@
 "use client";
 import { FormField } from "./ui/filter-toolbar";
 import { Dropdown } from "./ui/dropdown";
+import { Button } from "./ui/button";
 import { useState } from "react";
 import { ConfirmAction } from "./confirm-action";
 import { toKobo, money } from "@/lib/format";
@@ -85,10 +86,25 @@ export function PaymentSettingsEditor({
       throw new Error("Enter a valid whole number of cooldown hours.");
     payload.newPayoutAccountCooldownHours = hours;
     payload.payoutNameMatch = match;
-    payload.transferFeeTiers = tiers.map((t) => ({
+    const transferFeeTiers = tiers.map((t) => ({
       maxKobo: t.max === null ? null : parse(t.max),
       feeKobo: parse(t.fee),
     }));
+    payload.transferFeeTiers = transferFeeTiers;
+    if (
+      Number(payload.minTopupKobo) > Number(payload.maxTopupKobo) ||
+      Number(payload.minWithdrawalKobo) > Number(payload.maxDailyWithdrawalKobo)
+    )
+      throw new Error("Minimum amounts cannot exceed their maximums.");
+    let previous = 0;
+    for (const tier of tiers.slice(0, -1)) {
+      const upper = parse(tier.max ?? "");
+      if (upper <= previous)
+        throw new Error(
+          "Transfer fee upper amounts must increase from one tier to the next.",
+        );
+      previous = upper;
+    }
     if (hours !== settings.new_payout_account_cooldown_hours)
       differences.push([
         "Cooldown",
@@ -98,8 +114,10 @@ export function PaymentSettingsEditor({
     if (match !== settings.payout_name_match)
       differences.push(["Name matching", settings.payout_name_match, match]);
     if (
-      JSON.stringify(payload.transferFeeTiers) !==
-      JSON.stringify(settings.transfer_fee_tiers)
+      JSON.stringify(transferFeeTiers.map((tier) => [tier.maxKobo, tier.feeKobo])) !==
+      JSON.stringify(
+        settings.transfer_fee_tiers.map((tier) => [tier.maxKobo, tier.feeKobo]),
+      )
     )
       differences.push([
         "Transfer fee tiers",
@@ -151,6 +169,10 @@ export function PaymentSettingsEditor({
         </Dropdown>
       </FormField>
       <h3>Transfer fees · NGN</h3>
+      <p className="muted">
+        Bounded tiers run in increasing order. The final tier covers all higher
+        amounts.
+      </p>
       {tiers.map((t, i) => (
         <fieldset key={i}>
           <legend>Tier {i + 1}</legend>
@@ -188,8 +210,30 @@ export function PaymentSettingsEditor({
               }
             />
           </FormField>
+          {t.max !== null && (
+            <Button
+              variant="secondary"
+              disabled={!enabled}
+              onClick={() => setTiers(tiers.filter((_, j) => j !== i))}
+            >
+              Remove tier {i + 1}
+            </Button>
+          )}
         </fieldset>
       ))}
+      <Button
+        variant="secondary"
+        disabled={!enabled || tiers.length >= 50}
+        onClick={() =>
+          setTiers([
+            ...tiers.slice(0, -1),
+            { max: "", fee: "0.00" },
+            tiers[tiers.length - 1],
+          ])
+        }
+      >
+        Add fee tier
+      </Button>
       {error && (
         <p role="alert" className="form-error">
           {error}
