@@ -4,6 +4,9 @@ import { pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 
 const source = resolve(process.env.RAKKY_SOURCE ?? "../ride_app");
+const appConfig=JSON.parse(await readFile(resolve(source,"mobile/app.json"),"utf8")) as {expo:{scheme:string;android:{package:string}}};
+if(!/^[a-z][a-z0-9+.-]*$/.test(appConfig.expo.scheme))throw new Error("Invalid mobile app scheme");
+await writeFile("src/lib/native-app.generated.json",JSON.stringify({source:"ride_app/mobile/app.json",scheme:appConfig.expo.scheme,androidPackage:appConfig.expo.android.package},null,2)+"\n");
 const palettePath = resolve(source, "mobile/src/constants/colors.ts");
 const { lightColors, darkColors } = (await import(
   pathToFileURL(palettePath).href

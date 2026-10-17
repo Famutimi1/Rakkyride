@@ -35,6 +35,7 @@ export function DirectoryTable(props: {
   pagination?: PaginationInfo;
   noun?: string;
   actions?: ReactNode[];
+  showActions?: boolean;
 }) {
   return (
     <DirectoryTableClient

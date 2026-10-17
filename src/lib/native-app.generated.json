@@ -1,0 +1,5 @@
+{
+  "source": "ride_app/mobile/app.json",
+  "scheme": "rackyride",
+  "androidPackage": "com.rackyride.app"
+}

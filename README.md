@@ -62,3 +62,19 @@ Run backend and mobile type checks from their respective directories. Existing u
 `npm run sync:brand` reads the canonical mobile semantic colors, copies the supplied logo and local Inter fonts, and generates `src/app/brand.generated.css` with a source checksum. Do not author a second palette. The theme preference supports Light, Dark and System through one component tree.
 
 Primary implementation references: [Socket.io Redis adapter](https://socket.io/docs/v4/redis-adapter/), [Google Maps Embed modes](https://developers.google.com/maps/documentation/embed/embedding-map), installed Next version documentation, and the source specification in ride_app.
+# Transactional email
+
+The System → Email page (`/admin/emails`) uses the shared Rakky Ride backend for
+delivery history, configuration status, branded HTML/plain-text previews,
+audited retries and super-admin test emails. The backend requires migration
+`017_email_outbox.sql` and `018_email_settings.sql`; configure Resend only in its
+server environment. Super-admins can use **Email preferences** on that page to
+save a master switch and individual email-type switches without a server restart.
+See [email setup and recovery](/Users/mac/Desktop/ride_app/docs/features/email-system.md).
+
+Customer emails link to this dashboard's public `/open-app` page. Its button opens
+the installed native app using the scheme synchronized from `mobile/app.json` by
+`npm run sync:brand`; no staff login is required on this page. Set the backend's
+`EMAIL_DASHBOARD_URL` to this site's public HTTPS origin. `EMAIL_APP_URL` is no
+longer required. Optional `RAKKY_ANDROID_STORE_URL` / `RAKKY_IOS_STORE_URL` values
+in the dashboard environment show published store links; leave blank until ready.

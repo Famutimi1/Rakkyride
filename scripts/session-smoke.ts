@@ -13,13 +13,17 @@ async function body(req: IncomingMessage) {
 const directoryRequests: string[] = [];
 const mutationRequests: {path: string; method: string; payload: object}[] = [];
 let receivedGoogleNonce = "";
+let logoutStatus = 200;
+let meStatus = 200;
+const logoutRequests: {authorization?: string; refreshToken?: string}[] = [];
+const fixtureEmail={id:'00000000-0000-0000-0000-000000000001',userId:null,audience:'customer',recipient:'a•••@•••',template:'welcome_rider',subject:'Fixture welcome email',status:'blocked',attempts:0,lastError:null,createdAt:'2026-10-17T09:00:00Z',updatedAt:'2026-10-17T09:00:00Z',acceptedAt:null,deliveredAt:null,providerId:null,version:'fixture-email-version',canRetry:false};
 const mock = createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json");
   if (req.url === "/api/auth/login/initiate") {
     res.end(JSON.stringify({ phone: "+2348000000000" }));
     return;
   }
-  if (req.url === "/api/auth/login/verify") {
+  if (req.url === "/api/auth/login/staff/verify") {
     const data = await body(req);
     res.end(
       JSON.stringify({
@@ -61,6 +65,7 @@ const mock = createServer(async (req, res) => {
     return;
   }
   if (req.url === "/api/auth/me") {
+    if (meStatus !== 200) { res.statusCode = meStatus; res.end("{}"); return; }
     res.end(
       JSON.stringify({
         user: {
@@ -80,6 +85,17 @@ const mock = createServer(async (req, res) => {
       JSON.stringify({ nodeEnvironment: "test", paymentEnvironment: "test" }),
     );
     return;
+  }
+  if(req.url?.startsWith('/api/admin/emails')&&req.method==='GET'){
+    assert.equal(req.headers.authorization,'Bearer staff-test');
+    directoryRequests.push(req.url);
+    const path=new URL(req.url,'http://stub.invalid').pathname;
+    const value=path.endsWith('/configuration')?{enabled:false,ready:false,missing:['EMAIL_ENABLED'],sender:null,replyTo:null,adminRecipients:[],apiKeyConfigured:false,webhookConfigured:false,logoUrl:null,appUrl:null,dashboardUrl:null,worker:{name:'Email worker',state:'unknown',details:'Local fixture only'}}
+      :path.endsWith('/preferences')?{enabled:true,rules:{welcome_rider:true},version:1,updatedAt:'2026-10-17T09:00:00Z',controls:[{key:'welcome_rider',label:'Rider welcome',group:'Welcome & signup',description:'Welcome riders after signup.'}]}
+      :path.endsWith('/templates')?[{template:'welcome_rider',version:1,subject:'Fixture welcome email',text:'Fixture plain text',html:'<html><body><h1>Fixture template</h1></body></html>'}]
+      :path.endsWith(fixtureEmail.id)?{...fixtureEmail,text:'Fixture plain text',html:'<html><body><h1>Fixture template</h1></body></html>'}
+      :{items:[fixtureEmail],page:1,pageSize:20,total:1,summary:{blocked:1},asOf:'2026-10-17T09:00:00Z'};
+    res.end(JSON.stringify(value));return;
   }
   if (req.url?.startsWith("/api/admin/users?")) {
     if (req.headers.authorization !== "Bearer staff-test") {
@@ -160,13 +176,16 @@ const mock = createServer(async (req, res) => {
     );
     return;
   }
-  if (["/api/admin/payments/settings", "/api/admin/pricing/economy", "/api/admin/users/00000000-0000-0000-0000-000000000001", "/api/admin/trips/00000000-0000-0000-0000-000000000001/schedule"].includes(req.url ?? "")) {
+  if (["/api/admin/driver-applications/00000000-0000-0000-0000-000000000001/review", "/api/admin/payments/settings", "/api/admin/pricing/economy", "/api/admin/users/00000000-0000-0000-0000-000000000001", "/api/admin/trips/00000000-0000-0000-0000-000000000001/schedule", "/api/admin/emails/test", "/api/admin/emails/preferences", "/api/admin/emails/00000000-0000-0000-0000-000000000001/retry"].includes(req.url ?? "")) {
     assert.equal(req.headers.authorization, "Bearer staff-test");
     mutationRequests.push({path:req.url!,method:req.method!,payload:await body(req)});
     res.end(JSON.stringify({auditId:"local-audit-test"}));
     return;
   }
   if (req.url === "/api/auth/logout") {
+    const input = await body(req);
+    logoutRequests.push({authorization:req.headers.authorization,refreshToken:input.refreshToken});
+    res.statusCode = logoutStatus;
     res.end(JSON.stringify({ success: true }));
     return;
   }
@@ -219,6 +238,15 @@ try {
     }
   }
   assert.ok(ready, `Next did not start: ${output}`);
+  const beforeHandoff=directoryRequests.length;
+  const handoff=await fetch(base+'/open-app?path=%2Fdriver-dashboard');
+  assert.equal(handoff.status,200,'customer app handoff is public without staff cookies');
+  const handoffHtml=await handoff.text();
+  assert.ok(handoffHtml.includes('href="rackyride:///driver-dashboard"'));
+  assert.ok(handoffHtml.includes('Open Rakky Ride'));
+  const malicious=await (await fetch(base+'/open-app?path=https%3A%2F%2Fevil.test')).text();
+  assert.ok(malicious.includes('href="rackyride:///home"'),'untrusted destinations fall back to the home screen');
+  assert.equal(directoryRequests.length,beforeHandoff,'public handoff does not request administrative data');
   const protectedPage = await fetch(base + "/admin", { redirect: "manual" });
   assert.equal(
     protectedPage.status,
@@ -236,6 +264,7 @@ try {
       },
       body: JSON.stringify(payload),
     });
+  assert.equal((await post('verify',{phone:'x'.repeat(20000),code:'111111'})).status,413,'session transport bounds input before parsing or forwarding');
   assert.equal(
     (
       await post(
@@ -289,6 +318,18 @@ try {
     directoryRequests.includes("/api/admin/users?page=2&limit=20&mode=active"),
   );
   assert.equal(directoryHtml.includes("staff-test"), false);
+  const emailPage=await fetch(base+'/admin/emails?status=blocked&audience=customer',{headers:{Cookie:cookieHeader}});
+  assert.equal(emailPage.status,200);const emailHtml=await emailPage.text();
+  assert.ok(emailHtml.includes('Email history'));assert.ok(emailHtml.includes('Fixture welcome email'));
+  assert.ok(emailHtml.includes('Branded templates'));assert.ok(emailHtml.includes('sandbox=""'));
+  assert.ok(emailHtml.includes('Email preferences'));assert.ok(emailHtml.includes('role="switch"'));assert.ok(emailHtml.includes('Only a super-admin can change'));
+  assert.equal(emailHtml.includes('staff-test'),false);
+  assert.ok(directoryRequests.includes('/api/admin/emails?status=blocked&audience=customer'));
+  const emailDetail=await fetch(base+`/admin/emails/${fixtureEmail.id}`,{headers:{Cookie:cookieHeader}});
+  assert.equal(emailDetail.status,200);assert.ok((await emailDetail.text()).includes('Delivery details'));
+  const emailRead=await fetch(base+'/api/admin/emails/configuration',{headers:{Cookie:cookieHeader}});
+  assert.equal(emailRead.status,200);
+  assert.equal((await fetch(base+'/api/admin/emails/configuration')).status,401);
   await fetch(base + "/admin/riders", { headers: { Cookie: cookieHeader } });
   assert.ok(
     directoryRequests.includes("/api/admin/users?page=1&limit=20"),
@@ -326,12 +367,16 @@ try {
   );
   assert.equal((await post("refresh", {}, base, cookieHeader)).status, 200);
   const editRoutes = [
+    ["driver-applications/00000000-0000-0000-0000-000000000001/review", "POST"],
     ["payments/settings", "PATCH"], ["pricing/economy", "PATCH"],
     ["users/00000000-0000-0000-0000-000000000001", "PATCH"],
     ["trips/00000000-0000-0000-0000-000000000001/schedule", "POST"],
+    ["emails/test", "POST"],
+    ["emails/preferences", "PATCH"],
+    ["emails/00000000-0000-0000-0000-000000000001/retry", "POST"],
   ] as const;
   for (const [path, method] of editRoutes) {
-    const payload = {reason:"Local transport verification",requestKey:"00000000-0000-0000-0000-000000000002",expectedVersion:"local-version"};
+    const payload = {reason:"Local transport verification",requestKey:"00000000-0000-0000-0000-000000000002",...(path==='emails/test'?{}:{expectedVersion:"local-version"}),...(path.startsWith("driver-applications/")?{decision:"approved",services:{ride:"approved",courier:"rejected"},vehicleCategory:"car"}:{})};
     const edit = (origin:string, cookie = cookieHeader, verb:string = method) => fetch(`${base}/api/admin/${path}`, {
       method:verb, headers:{"Content-Type":"application/json",Origin:origin,Cookie:cookie},body:JSON.stringify(payload),
     });
@@ -349,6 +394,23 @@ try {
       .getSetCookie()
       .every((cookie) => /Expires=Thu, 01 Jan 1970/i.test(cookie)),
   );
+  assert.equal(logoutRequests.at(-1)?.authorization, undefined, "logout does not depend on valid access");
+  const refreshOnly = "__Host-rakky-refresh=refresh-test";
+  assert.equal((await post("logout", {}, base, refreshOnly)).status, 200);
+  assert.equal(logoutRequests.at(-1)?.refreshToken, "refresh-test");
+  assert.equal((await post("logout", {}, base, "__Host-rakky-access=expired-test; " + refreshOnly)).status, 200);
+  logoutStatus = 503;
+  const unconfirmed = await post("logout", {}, base, refreshOnly);
+  assert.equal(unconfirmed.status, 503);
+  assert.equal((await unconfirmed.json() as {locallySignedOut:boolean}).locallySignedOut, true);
+  assert.ok(unconfirmed.headers.getSetCookie().every(cookie => /Expires=Thu, 01 Jan 1970/i.test(cookie)));
+  logoutStatus = 200;
+  meStatus = 503;
+  const unavailableAfterRotation = await post("refresh", {}, base, refreshOnly);
+  assert.equal(unavailableAfterRotation.status, 503);
+  assert.ok(unavailableAfterRotation.headers.getSetCookie().some(cookie => cookie.startsWith("__Host-rakky-refresh=rotated-test")), "identity outage preserves the already rotated refresh credential");
+  assert.equal(unavailableAfterRotation.headers.getSetCookie().some(cookie => /Expires=Thu, 01 Jan 1970/i.test(cookie)), false);
+  meStatus = 200;
   assert.equal(
     (await post("google-challenge", {}, "https://other.invalid")).status,
     403,

@@ -14,6 +14,7 @@ export function DirectoryFilters({
   statusName = "status",
   statusLabel = "State",
   allLabel = "All states",
+  children,
 }: {
   statuses?: readonly DropdownOption[];
   defaultStatus?: string;
@@ -23,6 +24,7 @@ export function DirectoryFilters({
   statusName?: string;
   statusLabel?: string;
   allLabel?: string;
+  children?: import("react").ReactNode;
 }) {
   const params = useSearchParams(),
     path = usePathname(),
@@ -42,6 +44,8 @@ export function DirectoryFilters({
   };
   return (
     <SearchFilterBar
+      preview={preview}
+      recordSearchScope={searchName === "objectId" ? undefined : path.includes("support") ? "support" : path.includes("safety") ? "safety" : "people"}
       resetKey={params.toString()}
       onClear={clear}
       search={
@@ -65,13 +69,15 @@ export function DirectoryFilters({
         next.delete("before");
         next.set("page", "1");
         for (const [name, value] of new FormData(event.currentTarget)) {
-          const text = String(value).trim();
+          let text = String(value).trim();
+          if(text && ["from","to"].includes(name)) text=`${text}T00:00:00+01:00`;
           if (text || name === stateName) next.set(name, text);
           else next.delete(name);
         }
         router.replace(`${path}?${next}`, { scroll: false });
       }}
     >
+      {children}
       {choices && (
         <FormField label={account ? "Account status" : statusLabel}>
           <Dropdown

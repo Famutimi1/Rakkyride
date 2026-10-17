@@ -19,12 +19,14 @@ export function DataTable({
   columns,
   rows,
   label = "Records",
+  showActions = true,
   emptyTitle = "No records found",
   emptyMessage = "There are no records for the current query.",
 }: {
   columns: readonly TableColumn[];
   rows: readonly TableRow[];
   label?: string;
+  showActions?: boolean;
   emptyTitle?: string;
   emptyMessage?: string;
 }) {
@@ -53,9 +55,9 @@ export function DataTable({
                   {column.label}
                 </th>
               ))}
-              <th scope="col" className="table-actions">
+              {showActions && <th scope="col" className="table-actions">
                 Actions
-              </th>
+              </th>}
             </tr>
           </thead>
           <tbody>
@@ -63,7 +65,7 @@ export function DataTable({
               <Fragment key={row.id}>
                 {row.group && (
                   <tr className="agenda-date">
-                    <th colSpan={columns.length + 1} scope="rowgroup">
+                    <th colSpan={columns.length + (showActions ? 1 : 0)} scope="rowgroup">
                       {row.group}
                     </th>
                   </tr>
@@ -85,11 +87,11 @@ export function DataTable({
                       <div className="table-cell-content">{cell}</div>
                     </td>
                   ))}
-                  <td data-label="Actions" className="table-actions">
+                  {showActions && <td data-label="Actions" className="table-actions">
                     {row.actions ?? (
                       <InspectRow columns={columns} cells={row.cells} />
                     )}
-                  </td>
+                  </td>}
                 </tr>
               </Fragment>
             ))}

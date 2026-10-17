@@ -57,6 +57,8 @@ export function LoginForm({
               ? "This account does not have staff access."
               : reason === "expired"
                 ? "Your session expired. Renew your session or sign in again."
+                : reason === "logout_unconfirmed"
+                  ? "You are signed out on this browser. Server session revocation could not be confirmed. Ask the owner to revoke the session if needed."
                 : "The backend is unavailable. Please try again."}
           </div>
         )}

@@ -40,6 +40,8 @@ export function AdminShell({
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchMode, setSearchMode] = useState<"pages" | "records">("pages");
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
   const [mobile, setMobile] = useState(false);
   const [compactDefault, setCompactDefault] = useState(false);
   const collapsed = sidebarCollapsed ?? compactDefault;
@@ -255,7 +257,7 @@ export function AdminShell({
         <div className="preview-strip">
           <Icon name={preview ? "file" : "lock"} size={15} />
           {preview
-            ? "Development preview · All people, trips and amounts are fictional. Snapshot: 09 Oct 2026, 11:30 WAT."
+            ? "Development preview · All people, trips and amounts are fictional. Snapshot: 16 Oct 2026, 11:30 WAT."
             : "Staff workspace · Authorized snapshots. Sensitive actions follow your role and rollout settings."}
           <Link href="/login">
             Staff entry <span aria-hidden="true">↗</span>
@@ -263,15 +265,26 @@ export function AdminShell({
           {!preview && (
             <button
               className="text-link"
+              disabled={signingOut}
               onClick={async () => {
-                await fetch("/api/session/logout", { method: "POST" });
-                location.assign("/login");
+                setSigningOut(true);
+                setSignOutError("");
+                try {
+                  const response = await fetch("/api/session/logout", { method: "POST" });
+                  const data = await response.json() as { locallySignedOut?: boolean };
+                  if (response.ok || data.locallySignedOut) {
+                    location.assign(response.ok ? "/login" : "/login?reason=logout_unconfirmed");
+                  } else setSignOutError("Sign-out could not be completed. Try again.");
+                } catch {
+                  setSignOutError("Could not connect to sign out. Check your connection and try again.");
+                } finally { setSigningOut(false); }
               }}
             >
-              Sign out
+              {signingOut ? "Signing out…" : "Sign out"}
             </button>
           )}
         </div>
+        {signOutError && <div className="notice" role="alert">{signOutError}</div>}
         {!preview && (
           <div className="snapshot-tools">
             <RefreshControl />

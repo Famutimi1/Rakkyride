@@ -23,6 +23,8 @@ export function FinanceFilters({
   const [error, setError] = useState("");
   return (
     <SearchFilterBar
+      recordSearchScope="finance"
+      preview={preview}
       resetKey={params.toString()}
       aria-label="Financial filters"
       search={

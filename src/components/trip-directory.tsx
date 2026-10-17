@@ -39,7 +39,7 @@ export function TripDirectory({
     router = useRouter();
   const status = params.get("status") ?? "",
     service = params.get("service") ?? "",
-    order = params.get("order") ?? "desc";
+    order = params.get("order") ?? (mode === "scheduled" && params.get("view") !== "history" ? "asc" : "desc");
   const [query, setQuery] = useState(params.get("id") ?? "");
   const dense = useUiStore((s) => s.dense),
     setDense = useUiStore((s) => s.setDense);
@@ -101,11 +101,7 @@ export function TripDirectory({
         )
         .sort(
           (a, b) =>
-            (mode === "scheduled" && params.get("view") !== "history"
-              ? 1
-              : order === "asc"
-                ? 1
-                : -1) *
+            (order === "asc" ? 1 : -1) *
             ((mode === "scheduled"
               ? (a.scheduledAt ?? a.requestedAt)
               : a.requestedAt
@@ -141,6 +137,8 @@ export function TripDirectory({
     <div className="directory">
       {showFilters && (
         <SearchFilterBar
+          recordSearchScope="trips"
+          preview={preview}
           resetKey={params.toString()}
           aria-label="Trip filters"
           search={
@@ -296,13 +294,12 @@ export function TripDirectory({
             label: (
               <button
                 className="sort-button"
-                disabled={!preview}
                 onClick={() =>
                   filter("order", order === "desc" ? "asc" : "desc")
                 }
               >
                 {mode === "scheduled"
-                  ? `Scheduled pickup ${params.get("view") === "history" ? "↓" : "↑"}`
+                  ? `Scheduled pickup ${order === "desc" ? "↓" : "↑"}`
                   : `Requested ${order === "desc" ? "↓" : "↑"}`}
               </button>
             ),
@@ -359,8 +356,8 @@ export function TripDirectory({
               </small>
             </>,
             <>
-              <Timestamp value={trip.scheduledAt ?? trip.requestedAt} />
-              {trip.scheduledAt && <small>Scheduled pickup</small>}
+              <Timestamp value={mode === "scheduled" ? trip.scheduledAt ?? trip.requestedAt : trip.requestedAt} />
+              {trip.scheduledAt && <small>Scheduled pickup{mode !== "scheduled" && <> · <Timestamp value={trip.scheduledAt}/></>}</small>}
             </>,
             <div className="route-summary">
               <span>

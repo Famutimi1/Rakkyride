@@ -1,0 +1,39 @@
+.page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: var(--surfaceMuted);
+}
+.card {
+  width: 100%;
+  max-width: 520px;
+  padding: 32px 40px;
+  border: 1px solid var(--border);
+  border-top: 5px solid var(--primary);
+  border-radius: 24px;
+  background: var(--surface);
+  text-align: center;
+}
+.eyebrow { margin: 12px 0 18px; font-size: 10px; font-weight: 700; letter-spacing: 1.6px; color: var(--primary); }
+.card :global(.brand-logo) { margin: 0 auto; }
+.card h1 { font-size: 34px; line-height: 1.18; letter-spacing: -1.3px; }
+.description { margin: 20px 0 28px; color: var(--textMuted); font-size: 15px; line-height: 1.8; }
+.primary { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 54px; padding: 16px 22px; border-radius: 12px; background: var(--primary); color: var(--textInverse); font-size: 15px; font-weight: 600; }
+.primary:hover { opacity: 0.9; }
+.hint { margin-top: 16px; color: var(--textMuted); font-size: 12px; line-height: 1.8; }
+.install { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
+.install h2 { font-size: 14px; }
+.install p { margin-top: 8px; font-size: 13px; color: var(--textMuted); line-height: 1.7; }
+.stores { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.stores a { border: 1px solid var(--borderStrong); border-radius: 10px; padding: 12px; font-size: 13px; font-weight: 600; }
+.stores a:hover { background: var(--surfaceMuted); }
+.footer { margin-top: 24px; font-size: 11px; color: var(--textMuted); line-height: 1.7; }
+.signature { margin-top: 24px; color: var(--textMuted); font-size: 11px; }
+@media (max-width: 480px) {
+  .page { padding: 24px 16px; }
+  .card { padding: 24px; border-radius: 18px; }
+  .card h1 { font-size: 30px; }
+}

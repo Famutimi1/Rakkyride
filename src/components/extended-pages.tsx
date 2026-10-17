@@ -432,17 +432,22 @@ export async function ExtendedPage({
     );
   }
   if (section === "reconciliation" && id) {
-    if (!["topups", "withdrawals", "escrow"].includes(id)) notFound();
+    if (!["topups", "withdrawals", "escrow", "unsettled", "webhooks"].includes(id)) notFound();
     type Exception = {
       id: string;
       status: string;
       reference?: string;
-      amountKobo: string;
+      amountKobo?: string;
+      eventType?: string;
+      provider?: string;
+      hasError?: boolean;
+      evidenceClass?: string;
+      paymentStatus?: string;
       createdAt: string;
     };
     const qs = new URLSearchParams(
-      value(search, "cursor")
-        ? { cursor: value(search, "cursor")! }
+      value(search, id === "webhooks" ? "before" : "cursor")
+        ? { [id === "webhooks" ? "before" : "cursor"]: value(search, id === "webhooks" ? "before" : "cursor")! }
         : {
             page: value(search, "page") ?? "1",
             limit: value(search, "limit") ?? "20",
@@ -471,20 +476,22 @@ export async function ExtendedPage({
         <DirectoryTable
           preview={preview}
           pagination={data.pagination}
-          headers={["Record", "State", "Amount · NGN", "Created"]}
+          headers={["Record", "State", id === "webhooks" ? "Processing" : "Amount · NGN", ...(id === "unsettled" ? ["Evidence"] : []), "Created"]}
           nextHref={
             data.nextCursor
-              ? `/admin/reconciliation/${id}?cursor=${data.nextCursor}`
+              ? `/admin/reconciliation/${id}?${id === "webhooks" ? "before" : "cursor"}=${data.nextCursor}`
               : undefined
           }
+          actions={data.items.map((r) => id === "webhooks" ? <span>Worker retries automatically</span> : <Link href={`/admin/${id === "topups" ? "payments" : ["escrow", "unsettled"].includes(id) ? "trips" : "withdrawals"}/${r.id}`}>View record</Link>)}
           rows={data.items.map((r) => [
-            <Link
-              href={`/admin/${id === "topups" ? "payments" : id === "escrow" ? "trips" : "withdrawals"}/${r.id}`}
+            id === "webhooks" ? `${r.provider} · ${r.eventType} · #${r.id}` : <Link
+              href={`/admin/${id === "topups" ? "payments" : ["escrow", "unsettled"].includes(id) ? "trips" : "withdrawals"}/${r.id}`}
             >
               {r.reference ?? r.id}
             </Link>,
             <StatusBadge status={r.status} />,
-            <MoneyValue value={r.amountKobo} />,
+            id === "webhooks" ? (r.hasError ? "Processing failed; awaiting retry" : "Awaiting processing") : <MoneyValue value={r.amountKobo ?? "0"} />,
+            ...(id === "unsettled" ? [r.evidenceClass === "legacy_cash_commission_entries" ? "Legacy commission entries exist · investigate migration; do not charge again" : r.evidenceClass === "zero_commission_cash_no_posting" ? "Zero commission cash · no money posting expected" : "Settlement evidence missing"] : []),
             <Timestamp value={r.createdAt} />,
           ])}
         />
@@ -499,10 +506,13 @@ export async function ExtendedPage({
         state: string;
         latencyMs: number | null;
         observedAt: string | null;
+        details?: string;
+        lastSuccessAt?: string | null;
+        lastFailureAt?: string | null;
       }[];
       coverage: string;
     };
-    const data = preview
+    const data: Health = preview
       ? {
           checks: [
             "PostgreSQL",
@@ -530,7 +540,8 @@ export async function ExtendedPage({
         />
         <DirectoryTable
           preview={preview}
-          headers={["Dependency", "State", "Latency", "Observed"]}
+          showActions={false}
+          headers={["Dependency", "State", "Latency", "Observed", "Queue / provider basis", "Last success", "Last failure"]}
           rows={data.checks.map((c) => [
             c.name,
             <StatusBadge status={c.state} />,
@@ -540,6 +551,9 @@ export async function ExtendedPage({
             ) : (
               "No observation"
             ),
+            c.details ?? "Dependency point check",
+            c.lastSuccessAt ? <Timestamp value={c.lastSuccessAt}/> : "No retained successful job",
+            c.lastFailureAt ? <Timestamp value={c.lastFailureAt}/> : "No retained failed job",
           ])}
         />
         <Notice>{data.coverage}</Notice>
@@ -775,6 +789,9 @@ export async function ExtendedPage({
       ...(service ? { service } : {}),
     });
     type Report = {
+      operations:{requests:number;noDriver:number;completed:number;cancelled:number;assigned:number;meanAssignmentSeconds:string|null;offers:number};
+      ratings:{count:number;average:string|null;lowRatings:number};
+      paymentOutcomes:{status:string;count:number}[];
       outcomes: { service: string; status: string; count: string }[];
       settlement: {
         settledValueKobo: string;
@@ -836,9 +853,23 @@ export async function ExtendedPage({
         </Notice>
         {data ? (
           <>
+            <Panel title="Operational indicators" detail="Request cohort, including requests still in progress. Assignment time excludes scheduled requests accepted before search starts.">
+              <DefinitionList items={[
+                ["Requests",data.operations.requests],
+                ["No driver found",`${data.operations.noDriver} · ${data.operations.requests ? (100*data.operations.noDriver/data.operations.requests).toFixed(1)+"%" : "No requests"}`],
+                ["Completion",`${data.operations.completed} · ${data.operations.requests ? (100*data.operations.completed/data.operations.requests).toFixed(1)+"%" : "No requests"}`],
+                ["Cancellation",`${data.operations.cancelled} · ${data.operations.requests ? (100*data.operations.cancelled/data.operations.requests).toFixed(1)+"%" : "No requests"}`],
+                ["Assigned requests",data.operations.assigned],
+                ["Mean assignment time",data.operations.meanAssignmentSeconds ? `${data.operations.meanAssignmentSeconds} seconds` : "No measured assignments"],
+                ["Driver offers",data.operations.offers],
+              ]}/>
+            </Panel>
+            <Panel title="Ratings recorded in this period"><DefinitionList items={[["Ratings",data.ratings.count],["Average",data.ratings.average ?? "Not yet rated"],["1–2 star ratings",data.ratings.lowRatings]]}/></Panel>
+            <Panel title="Payment intent outcomes · all services" detail="Created in the report period; current outcome. Service filter does not change payment intent counts."><DirectoryTable preview={false} showActions={false} headers={["Outcome","Count"]} rows={data.paymentOutcomes.map(r=>[<StatusBadge status={r.status}/>,r.count])}/></Panel>
             <Panel title="Request cohort outcomes">
               <DirectoryTable
                 preview={false}
+                showActions={false}
                 headers={["Service", "Outcome", "Count"]}
                 rows={data.outcomes.map((r) => [
                   r.service,
@@ -866,6 +897,7 @@ export async function ExtendedPage({
             <Panel title="Net ledger postings · all services">
               <DirectoryTable
                 preview={false}
+                showActions={false}
                 headers={["Account", "Net amount · NGN"]}
                 rows={data.ledger.map((r) => [
                   statusLabel(r.code),

@@ -49,6 +49,7 @@ type MapsWindow = Window & {
   __rakkyMapsReady?: () => void;
   gm_authFailure?: () => void;
 };
+export const MAPS_AUTH_FAILURE = "rakky:maps-auth-failure";
 let loading: Promise<MapsRuntime> | null = null;
 export function loadGoogleMaps(key: string): Promise<MapsRuntime> {
   const host = window as MapsWindow;
@@ -77,7 +78,10 @@ export function loadGoogleMaps(key: string): Promise<MapsRuntime> {
       done = true;
       resolve(host.google.maps);
     };
-    host.gm_authFailure = fail;
+    host.gm_authFailure = () => {
+      window.dispatchEvent(new Event(MAPS_AUTH_FAILURE));
+      fail();
+    };
     const query = new URLSearchParams({
       key,
       loading: "async",

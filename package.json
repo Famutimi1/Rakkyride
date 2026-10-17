@@ -10,7 +10,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "node --experimental-strip-types --test src/lib/*.test.ts",
     "sync:brand": "node --experimental-strip-types scripts/sync-brand.ts",
-    "test:session": "node --experimental-strip-types scripts/session-smoke.ts"
+    "test:session": "node --experimental-strip-types scripts/session-smoke.ts",
+    "verify": "npm run typecheck && npm test && npm run build && npm run test:session"
   },
   "dependencies": {
     "next": "16.4.0",

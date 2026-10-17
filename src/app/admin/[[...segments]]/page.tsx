@@ -7,6 +7,7 @@ import {
   type PaymentSettings,
 } from "@/components/payment-settings";
 import { ExtendedPage } from "@/components/extended-pages";
+import { SupportSettingsEditor, type SupportSettings } from "@/components/support-settings";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -30,6 +31,8 @@ import { TripEvidenceMap } from "@/components/trip-evidence-map";
 import { OperationsMap, TripRouteMap } from "@/components/operations-map";
 import { DirectoryFilters } from "@/components/directory-filters";
 import { DirectoryTable } from "@/components/directory-table";
+import { DriverServiceState } from "@/components/driver-service-state";
+import { Dropdown } from "@/components/ui/dropdown";
 import { ApplicationReview } from "@/components/application-review";
 import { RefundAction, AccountActions } from "@/components/money-actions";
 import { LiveOperations } from "@/components/live-operations";
@@ -68,6 +71,7 @@ function queryString(params: Search, extras: Record<string, string> = {}) {
     "paymentMethod",
     "paymentStatus",
     "dateBasis",
+    "order",
     "from",
     "to",
     "target",
@@ -192,29 +196,7 @@ async function RenderAdminPage({
     return await ExtendedPage({ section, id, search, preview });
   if (section === "applications" && id) {
     const application = preview
-      ? ({
-          userId: id,
-          name:
-            fixtures.people.find((p) => p.id === id)?.name ??
-            "Example applicant",
-          status: "pending",
-          version: fixtures.fixtureAsOf,
-          submittedAt: fixtures.fixtureAsOf,
-          reviewedAt: null,
-          address: null,
-          make: "Toyota",
-          model: "Camry",
-          year: 2020,
-          plate: "DEMO-103",
-          rejectionReason: null,
-          documents: [
-            { kind: "license", available: false },
-            { kind: "registration", available: false },
-            { kind: "insurance", available: false },
-          ],
-          allowedActions: [],
-          asOf: fixtures.fixtureAsOf,
-        } as DriverApplication)
+      ? fixtures.driverApplication(id)
       : await adminRead<DriverApplication>(
           `driver-applications/${encodeURIComponent(id)}`,
         );
@@ -226,9 +208,9 @@ async function RenderAdminPage({
         <PageHeader
           eyebrow="APPLICATION REVIEW"
           title={application.name}
-          description="Review the current document set before making a decision."
+          description="Review vehicle evidence, consent, and passenger/courier decisions independently."
         />
-        <ApplicationReview application={application} preview={preview} />
+        <ApplicationReview application={application} preview={preview} staffEntryUrl={process.env.DASHBOARD_ORIGIN ? `${process.env.DASHBOARD_ORIGIN.replace(/\/$/, "")}/admin/applications` : "/admin/applications"} />
       </>
     );
   }
@@ -621,9 +603,10 @@ async function RenderAdminPage({
               <DefinitionList
                 items={[
                   ["Method", statusLabel(trip.paymentMethod)],
+                  ["Commission rate", trip.commissionBps === null || trip.commissionBps === undefined ? "Historical trip · no booking snapshot" : `${trip.commissionBps/100}% · saved at booking`],
                   [
                     "Commission",
-                    trip.commissionKobo ? (
+                    trip.commissionKobo !== null && trip.commissionKobo !== undefined ? (
                       <MoneyValue value={trip.commissionKobo} />
                     ) : (
                       "Not settled"
@@ -631,7 +614,7 @@ async function RenderAdminPage({
                   ],
                   [
                     "Driver earning",
-                    trip.driverEarningKobo ? (
+                    trip.driverEarningKobo !== null && trip.driverEarningKobo !== undefined ? (
                       <MoneyValue value={trip.driverEarningKobo} />
                     ) : (
                       "Not settled"
@@ -674,7 +657,7 @@ async function RenderAdminPage({
                     refund?.eligible ? (
                       <MoneyValue value={refund.remainingKobo} />
                     ) : (
-                      "Not eligible"
+                      refund?.ineligibleReason === "trip_settlement_evidence_required" ? "Settlement evidence required" : "Not eligible"
                     ),
                   ],
                   [
@@ -828,6 +811,7 @@ async function RenderAdminPage({
           <Panel title="Profile">
             <DefinitionList
               items={[
+                ["Platform role", statusLabel(person.platformRole ?? "user")],
                 ["Phone", person.phoneMasked],
                 ["Email", person.emailMasked],
                 ["Joined", <Timestamp key="joined" value={person.joinedAt} />],
@@ -848,17 +832,21 @@ async function RenderAdminPage({
                   ],
                   ["Vehicle", person.driver.vehicle],
                   ["Plate", person.driver.plate],
-                  [
-                    "Courier opted in",
-                    person.driver.courierOptIn ? "Yes" : "No",
-                  ],
+                  ["Vehicle category",person.driver.vehicleCategory??"Needs staff classification"],
+                  ["Passenger rides",<DriverServiceState key="ride" status={person.driver.rideServiceStatus} enabled={person.driver.rideOptIn} availability={person.driver.serviceAvailability?.ride} />],
+                  ["Courier deliveries",<DriverServiceState key="courier" status={person.driver.courierServiceStatus} enabled={person.driver.courierOptIn} availability={person.driver.serviceAvailability?.courier} />],
                   [
                     "Rating",
                     person.driver.ratingCount
                       ? `${person.driver.rating} · ${person.driver.ratingCount} ratings`
                       : "Not yet rated",
                   ],
-                  ["Availability", statusLabel(person.driver.availability)],
+                  ["Availability across services", statusLabel(person.driver.availability)],
+                  ["Presence basis", person.driver.presenceReason ?? "No observation"],
+                  ["Last location update", person.driver.locationAt ? <Timestamp value={person.driver.locationAt}/> : "No retained location"],
+                  ["Current trip", person.driver.activeTripId ? <Link href={`/admin/trips/${person.driver.activeTripId}`}>View active trip</Link> : "None"],
+                  ["Application record", <Link href={`/admin/applications/${person.id}`}>View application and private documents</Link>],
+                  ["Payout readiness", person.driver.payoutAccounts?.length ? person.driver.payoutAccounts.map(a=>`${a.bank} · •••• ${a.last4}`).join(", ") : "No active payout account"],
                 ]}
               />
             </Panel>
@@ -892,7 +880,7 @@ async function RenderAdminPage({
       </>
     );
   }
-  if (id && !(section === "settings" && id === "payments")) notFound();
+  if (id && !(section === "settings" && ["payments", "support"].includes(id))) notFound();
   if (section === "overview") {
     const [data, tripPage] = await Promise.all([
       preview
@@ -910,7 +898,7 @@ async function RenderAdminPage({
     ]);
     const metrics = [
       ["Active trips", data.activeTrips, "Live snapshot", "route"],
-      ["Available drivers", data.availableDrivers, "Live snapshot", "car"],
+      ["Available passenger drivers", data.availableDrivers, "Live snapshot", "car"],
       [
         "Completed rides",
         data.completedRides,
@@ -1057,6 +1045,7 @@ async function RenderAdminPage({
             detail="Selected day · WAT · completed passenger rides, delivered parcels, and returned parcels separately"
           >
             <DirectoryTable
+              showActions={false}
               preview={preview}
               headers={[
                 "Hour · WAT",
@@ -1093,7 +1082,7 @@ async function RenderAdminPage({
       live: [
         "Live operations",
         "OPERATIONS",
-        "Active trips from an authorized snapshot. Fleet map subscriptions are pending.",
+        "Active trips and fleet positions from your latest snapshot.",
       ],
       scheduled: [
         "Scheduled rides",
@@ -1206,19 +1195,17 @@ async function RenderAdminPage({
   }
   if (["riders", "drivers", "applications"].includes(section)) {
     const drivers = section !== "riders";
-    const samples = fixtures.people
-      .filter((p) => !drivers || Boolean(p.driver))
-      .filter(
-        (p) =>
-          (section !== "applications" ||
-            p.driver?.status ===
-              (typeof search.status === "string" ? search.status : "pending") ||
-            search.status === "") &&
-          (!search.id ||
-            p.id.toLowerCase() === String(search.id).toLowerCase()) &&
-          (!search.status || p.driver?.status === search.status) &&
-          (!search.mode || p.active === (search.mode === "active")),
-      );
+    const requestedState=typeof search.status==="string"?search.status:section==="applications"?"pending":"";
+    const samples=fixtures.people.filter(person=>{
+      if(drivers&&!person.driver)return false;
+      const profile=person.driver;
+      const pending=profile?.rideServiceStatus==="pending"||profile?.courierServiceStatus==="pending";
+      const serviceStatus=search.service==="ride"?profile?.rideServiceStatus:search.service==="courier"?profile?.courierServiceStatus:undefined;
+      return (!requestedState||profile?.status===requestedState||(requestedState==="pending"&&pending))
+        &&(!search.service||(serviceStatus!==undefined&&serviceStatus!=="none"))
+        &&(!search.id||person.id.toLowerCase()===String(search.id).toLowerCase())
+        &&(!search.mode||person.active===(search.mode==="active"));
+    });
     const path =
       section === "riders"
         ? "users"
@@ -1243,14 +1230,14 @@ async function RenderAdminPage({
           }
           description={
             section === "applications"
-              ? "Pending applications with authenticated documents and audited decisions."
+              ? "Passenger and courier applications, including existing drivers requesting another service."
               : "One user identity, with separate account, application and availability states."
           }
         />
         {section === "applications" && (
           <Notice>
             Select an applicant to inspect private documents and review the
-            current submission. Decisions require a reason and reject stale
+            current submission. Pending includes approved drivers awaiting a second-service decision. Decisions require a reason and reject stale
             document versions.
           </Notice>
         )}
@@ -1258,6 +1245,7 @@ async function RenderAdminPage({
           preview={preview}
           searchLabel="Exact user ID"
           defaultStatus={section === "applications" ? "pending" : ""}
+          statusLabel={drivers?"Profile / review state":"State"}
           statuses={
             drivers
               ? ["pending", "approved", "rejected"].map((value) => ({
@@ -1266,7 +1254,10 @@ async function RenderAdminPage({
                 }))
               : undefined
           }
-        />
+        >
+          {drivers&&<FormField label="Service enrollment"><Dropdown aria-label="Service enrollment" name="service" defaultValue={typeof search.service==="string"?search.service:""} options={[{value:"",label:"All services"},{value:"ride",label:"Passenger rides"},{value:"courier",label:"Courier deliveries"}]} /></FormField>}
+        </DirectoryFilters>
+        <div className={drivers ? "driver-directory" : undefined}>
         <DirectoryTable
           actions={data.items.map((person) => (
             <RowActions
@@ -1304,14 +1295,9 @@ async function RenderAdminPage({
                 : "users"
           }
           nextHref={nextLink(`/admin/${section}`, search, data.nextCursor)}
-          headers={[
-            "Name / ID",
-            "Contact",
-            "Account",
-            ...(drivers
-              ? ["Application", "Vehicle", "Courier"]
-              : ["Joined", "Trips"]),
-          ]}
+          headers={drivers
+            ? ["Driver / profile", "Vehicle", "Passenger rides", "Courier deliveries"]
+            : ["Name / ID", "Contact", "Account", "Joined", "Trips"]}
           rows={data.items.map((p) => [
             <>
               <Link
@@ -1320,28 +1306,28 @@ async function RenderAdminPage({
               >
                 {p.name}
               </Link>
-              <small>{p.id}</small>
+              <small>{p.id}</small><small>{statusLabel(p.platformRole ?? "user")}</small>
+              {drivers && <>
+                <small>Profile: {statusLabel(p.driver?.status ?? "none")}</small>
+                <small>Account: {p.active ? "Active" : "Inactive"}</small>
+              </>}
             </>,
-            <>
-              {p.phoneMasked}
-              <small>{p.emailMasked}</small>
-            </>,
-            <StatusBadge status={p.active ? "active" : "inactive"} />,
             ...(drivers
               ? [
-                  <StatusBadge
-                    key="status"
-                    status={p.driver?.status ?? "none"}
-                  />,
                   <>
                     {p.driver?.vehicle}
                     <small>{p.driver?.plate}</small>
+                    <small>{p.driver?.vehicleCategory??"Category needs review"}</small>
                   </>,
-                  p.driver?.courierOptIn ? "Opted in" : "Not opted in",
+                  <DriverServiceState key="ride" status={p.driver?.rideServiceStatus} enabled={p.driver?.rideOptIn} />,
+                  <DriverServiceState key="courier" status={p.driver?.courierServiceStatus} enabled={p.driver?.courierOptIn} />,
                 ]
-              : [<Timestamp key="joined" value={p.joinedAt} />, p.trips]),
+              : [<>{p.phoneMasked}<small>{p.emailMasked}</small></>,
+                  <StatusBadge key="account" status={p.active ? "active" : "inactive"} />,
+                  <Timestamp key="joined" value={p.joinedAt} />, p.trips]),
           ])}
         />
+        </div>
       </>
     );
   }
@@ -1514,6 +1500,8 @@ async function RenderAdminPage({
       exceptions: { kind: string; count: string }[];
       coverage: string;
       asOf: string;
+      providerBalanceKobo: string | null;
+      providerObservedAt: string | null;
     };
     const data = preview
       ? null
@@ -1550,6 +1538,7 @@ async function RenderAdminPage({
             );
           })}
         </div>
+        <Panel title="Provider balance observation"><DefinitionList items={[["Paystack NGN balance",data?.providerBalanceKobo ? <MoneyValue value={data.providerBalanceKobo}/> : "No observation"],["Observed",data?.providerObservedAt ? <Timestamp value={data.providerObservedAt}/> : "Awaiting a scheduled provider balance check"]]}/></Panel>
         <Panel
           title="Derived exception queues"
           detail={data?.coverage ?? "No provider observations are simulated"}
@@ -1563,6 +1552,8 @@ async function RenderAdminPage({
                   "Top-up mismatches": "topups",
                   "Unresolved withdrawals": "withdrawals",
                   "Terminal trips with held funds": "escrow",
+                  "Unprocessed webhooks": "webhooks",
+                  "Fulfilled trips without settlement evidence": "unsettled",
                 };
                 return [
                   queues[e.kind] ? (
@@ -1587,10 +1578,31 @@ async function RenderAdminPage({
           )}
         </Panel>
         <Notice>
-          Provider balance, worker heartbeats and last-success observations are
-          not yet instrumented. Eligibility thresholds are not customer service
-          guarantees.
+          Worker observations are available under Service health. Missing settlement evidence requires investigation; this queue never posts money automatically. Cash trips with zero commission may legitimately have no ledger settlement posting.
         </Notice>
+      </>
+    );
+  }
+  if (section === "settings" && id === "support") {
+    const settings = preview ? null : await adminRead<SupportSettings>("support-settings");
+    const staff = preview ? null : await requireStaff();
+    return (
+      <>
+        <PageHeader eyebrow="SYSTEM" title="Support settings" description="Manage the contact details, staffed hours and availability message shown in the app." />
+        <Panel title="Published support information">
+          {settings ? <DefinitionList items={[
+            ["Phone", settings.phone ?? "Not configured"],
+            ["Email", settings.email ?? "Not configured"],
+            ["Staffed hours", settings.staffedHours],
+            ["Availability message", settings.availabilityMessage],
+            ["Version", String(settings.version)],
+            ["Last updated", <Timestamp key="updated" value={settings.updatedAt} />],
+          ]} /> : <QueryState title="No settings loaded" message="Preview mode does not publish support contact details." />}
+        </Panel>
+        {settings && staff?.platformRole === "super_admin" && (
+          <Panel title="Edit support information"><SupportSettingsEditor key={settings.version} settings={settings} /></Panel>
+        )}
+        {settings && staff?.platformRole !== "super_admin" && <Notice>A super admin can update support information.</Notice>}
       </>
     );
   }
@@ -1674,6 +1686,11 @@ async function RenderAdminPage({
         reason: string;
         createdAt: string;
         transactionId: string | null;
+        objectType: string | null;
+        objectId: string | null;
+        targetUserId: string | null;
+        requestKey: string | null;
+        changes: {before: Record<string,unknown> | null; after: Record<string,unknown> | null};
       }[];
       coverage: string;
       nextCursor: string | null;
@@ -1687,6 +1704,8 @@ async function RenderAdminPage({
       "action",
       "objectId",
       "actorId",
+      "from",
+      "to",
     ])
       if (typeof search[key] === "string" && search[key])
         qs.set(key, search[key] as string);
@@ -1726,8 +1745,21 @@ async function RenderAdminPage({
             "freeze",
             "unfreeze",
             "settings_update",
+            "pricing_update",
+            "person_update",
+            "schedule_update",
+            "support_settings_updated",
+            "email_settings_updated",
+            "email_retry",
+            "email_test",
+            "email_detail_read",
+            "reconciliation_queue_read",
           ].map((action) => ({ value: action, label: statusLabel(action) }))}
-        />
+        >
+          <label className="form-label">Staff actor UUID<input name="actorId" defaultValue={typeof search.actorId === "string" ? search.actorId : ""} pattern="[0-9a-fA-F-]{36}"/></label>
+          <label className="form-label">From · WAT<input type="date" name="from" defaultValue={typeof search.from === "string" ? search.from.slice(0,10):""}/></label>
+          <label className="form-label">To · WAT (exclusive)<input type="date" name="to" defaultValue={typeof search.to === "string" ? search.to.slice(0,10):""}/></label>
+        </DirectoryFilters>
         <Notice>
           {data?.coverage ??
             "Staff reads, exports, financial actions, reviews, configuration changes, and care activity are audited. Preview does not simulate audit history."}
@@ -1742,13 +1774,15 @@ async function RenderAdminPage({
                 ? `/admin/audit?${new URLSearchParams({ ...Object.fromEntries(qs), before: data.nextCursor })}`
                 : undefined
             }
-            headers={["Actor", "Action", "Reason", "Time", "Transaction"]}
+            headers={["Actor", "Action", "Object / target", "Reason", "Changes", "Time", "Transaction"]}
             rows={data.items.map((a) => [
               a.actor,
               statusLabel(a.action),
+              <>{a.objectType ?? "Staff operation"}<small>{a.objectId ?? a.targetUserId ?? "—"}</small></>,
               a.reason,
+              <details><summary>View recorded changes</summary><pre>{JSON.stringify(a.changes, null, 2)}</pre><small>Request key: {a.requestKey ?? "Read operation"}</small></details>,
               <Timestamp value={a.createdAt} />,
-              a.transactionId ?? "Not applicable",
+              a.transactionId ? <Link href={`/admin/transactions/${a.transactionId}`}>{a.transactionId}</Link> : "Not applicable",
             ])}
           />
         ) : (

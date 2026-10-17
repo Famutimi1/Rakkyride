@@ -6,8 +6,9 @@ import type {
   Withdrawal,
   LedgerAccount,
   Overview,
+  DriverApplication,
 } from "@/contracts/admin";
-export const fixtureAsOf = "2026-10-09T10:30:00Z";
+export const fixtureAsOf = "2026-10-16T10:30:00Z";
 export const people: Person[] = [
   {
     id: "demo-user-001",
@@ -40,6 +41,10 @@ export const people: Person[] = [
       vehicle: "Toyota Corolla · Silver",
       plate: "DEMO-101",
       courierOptIn: true,
+      rideOptIn: true,
+      vehicleCategory:"car",
+      rideServiceStatus:"approved",
+      courierServiceStatus:"approved",
       availability: "busy",
       locationAt: "2026-10-09T10:29:50Z",
       rating: 4.8,
@@ -56,9 +61,13 @@ export const people: Person[] = [
     trips: 94,
     driver: {
       status: "approved",
-      vehicle: "Hyundai Accent · White",
+      vehicle: "Bajaj Boxer · White",
       plate: "DEMO-102",
       courierOptIn: true,
+      rideOptIn:false,
+      vehicleCategory:"motorcycle",
+      rideServiceStatus:"none",
+      courierServiceStatus:"approved",
       availability: "busy",
       locationAt: "2026-10-09T10:28:00Z",
       rating: 4.9,
@@ -74,10 +83,14 @@ export const people: Person[] = [
     active: true,
     trips: 0,
     driver: {
-      status: "pending",
+      status: "approved",
       vehicle: "Toyota Camry · Grey",
       plate: "DEMO-103",
       courierOptIn: false,
+      rideOptIn:true,
+      vehicleCategory:"car",
+      rideServiceStatus:"approved",
+      courierServiceStatus:"pending",
       availability: "offline",
       locationAt: null,
       rating: null,
@@ -85,6 +98,27 @@ export const people: Person[] = [
     },
   },
 ];
+people.push({
+  id:"demo-driver-004",name:"Amina Bello",phoneMasked:"+234 ••• ••• 8014",emailMasked:"a•••@example.test",joinedAt:fixtureAsOf,active:true,trips:0,
+  driver:{status:"pending",vehicle:"TVS HLX · Black",plate:"DEMO-104",vehicleCategory:"motorcycle",rideServiceStatus:"none",courierServiceStatus:"pending",rideOptIn:false,courierOptIn:false,availability:"offline",locationAt:null,rating:null,ratingCount:0}
+},{
+  id:"demo-driver-005",name:"Femi Adeyemi",phoneMasked:"+234 ••• ••• 8015",emailMasked:"f•••@example.test",joinedAt:fixtureAsOf,active:true,trips:8,
+  driver:{status:"approved",vehicle:"Toyota Yaris · Silver",plate:"DEMO-105",vehicleCategory:null,rideServiceStatus:"approved",courierServiceStatus:"none",rideOptIn:true,courierOptIn:false,availability:"offline",locationAt:null,rating:4.8,ratingCount:6}
+});
+export function driverApplication(id:string):DriverApplication {
+  const person=people.find(person=>person.id===id),profile=person?.driver;
+  const state=(service:"ride"|"courier")=>{
+    const status=(service==="ride"?profile?.rideServiceStatus:profile?.courierServiceStatus)??"none";
+    const legacy=service==="ride"&&status==="approved"&&profile?.vehicleCategory===null;
+    const consentAccepted=status!=="none"&&status!=="rejected";
+    return{status,enabled:(service==="ride"?profile?.rideOptIn:profile?.courierOptIn)??false,consentAccepted,
+      consentBasis:legacy?"legacy_passenger_approval" as const:consentAccepted?"recorded" as const:"missing" as const,
+      consentRecord:!consentAccepted||legacy?null:{service,action:"accepted" as const,version:"service-choice-2026-10-16",at:fixtureAsOf},review:status==="none"?null:{submittedAt:fixtureAsOf,requestedPreference:true}};
+  };
+  return{userId:id,name:person?.name??"Example applicant",status:profile?.status??"none",version:fixtureAsOf,submittedAt:fixtureAsOf,reviewedAt:null,address:null,make:profile?.vehicleCategory==="motorcycle"?"TVS":"Toyota",model:profile?.vehicleCategory==="motorcycle"?"HLX":"Camry",year:2020,plate:profile?.plate??null,rejectionReason:null,
+    documents:[{kind:"license",available:false},{kind:"registration",available:false},{kind:"insurance",available:false}],allowedActions:["review-services"],asOf:fixtureAsOf,
+    serviceSettings:{version:1,vehicleCategory:profile?.vehicleCategory??null,requestedVehicleCategory:profile?.vehicleCategory??null,services:{ride:state("ride"),courier:state("courier")},consent:{version:"service-choice-2026-10-16",descriptions:{ride:"Example passenger service consent",courier:"Example courier service consent"}}}};
+}
 export const trips: Trip[] = [
   {
     id: "DEMO-RK-1048",

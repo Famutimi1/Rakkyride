@@ -1,13 +1,26 @@
 import Link from "next/link";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { BrandLogo } from "@/components/brand-logo";
 import { LoginForm } from "@/components/login-form";
 import { previewEnabled } from "@/lib/server";
+import { localLoginRedirect } from "@/lib/login-origin";
 export default async function Login({
   searchParams,
 }: {
   searchParams: Promise<{ reason?: string }>;
 }) {
   const { reason } = await searchParams;
+  const destination = localLoginRedirect(
+    (await headers()).get("host"),
+    process.env.DASHBOARD_ORIGIN,
+    process.env.NODE_ENV === "development",
+  );
+  if (destination) {
+    const canonical = new URL(destination);
+    if (typeof reason === "string") canonical.searchParams.set("reason", reason);
+    redirect(canonical.toString());
+  }
   return (
     <main className="login-page">
       <section className="login-brand">

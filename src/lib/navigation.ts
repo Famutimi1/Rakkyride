@@ -47,7 +47,9 @@ export const navigation: readonly {
   {
     label: "System",
     items: [
+      ["Email", "/admin/emails", "file"],
       ["Payment settings", "/admin/settings/payments", "settings"],
+      ["Support settings", "/admin/settings/support", "settings"],
       ["Audit log", "/admin/audit", "file"],
       ["Service health", "/admin/health", "pulse"],
       ["Team access", "/admin/team", "lock"],

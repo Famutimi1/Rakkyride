@@ -13,6 +13,22 @@ export const tripStatuses = [
 ] as const;
 export type TripStatus = (typeof tripStatuses)[number];
 export type ServiceType = "ride" | "courier";
+export type DriverServiceStatus = "none" | "pending" | "approved" | "rejected" | "suspended";
+export type VehicleCategory = "car" | "motorcycle";
+export interface DriverServiceSettings {
+  version: number;
+  vehicleCategory: VehicleCategory | null;
+  requestedVehicleCategory: VehicleCategory | null;
+  services: Record<ServiceType, {
+    status: DriverServiceStatus;
+    enabled: boolean;
+    consentAccepted: boolean;
+    consentBasis?: "recorded" | "legacy_passenger_approval" | "missing";
+    consentRecord?: { service: ServiceType; action: "accepted" | "withdrawn"; version: string; at: string } | null;
+    review: { submittedAt?: string; reviewedAt?: string; reason?: string; requestedPreference?: boolean } | null;
+  }>;
+  consent: { version: string; descriptions: Record<ServiceType, string> };
+}
 export type StaffRole = "admin" | "super_admin";
 export type Kobo = string;
 export interface Scope {
@@ -96,6 +112,7 @@ export interface Trip {
   updatedAt: string;
   paymentMethod: "cash" | "wallet";
   paymentStatus: "pending" | "unpaid" | "held" | "settled" | "released";
+  commissionBps?: number | null;
   fareKobo: Kobo;
   currency: "NGN";
   locationAt: string | null;
@@ -135,7 +152,16 @@ export interface Person {
     vehicle: string;
     plate: string;
     courierOptIn: boolean;
-    availability: "offline" | "available" | "busy" | "unknown";
+    rideOptIn?: boolean;
+    vehicleCategory?: VehicleCategory | null;
+    rideServiceStatus?: DriverServiceStatus;
+    courierServiceStatus?: DriverServiceStatus;
+    serviceAvailability?: Record<ServiceType,string>;
+    availability: "offline" | "available" | "busy" | "unknown" | "stale" | "ineligible";
+    presenceReason?: string;
+    activeTripId?: string | null;
+    activeRole?: string;
+    payoutAccounts?: {bank:string;last4:string;active:boolean}[];
     locationAt: string | null;
     rating: number | null;
     ratingCount: number;
@@ -213,8 +239,10 @@ export interface BalanceAdjustment extends MoneyAction {
 }
 export interface ApplicationDecision {
   userId: string;
-  expectedUpdatedAt: string;
+  expectedVersion: string;
   decision: "approved" | "rejected";
+  services: Partial<Record<ServiceType, "approved" | "rejected" | "suspended">>;
+  vehicleCategory?: VehicleCategory;
   reason: string;
   requestKey: string;
 }
@@ -258,7 +286,14 @@ export const routeInventory = [
   ["GET", "/api/admin/reconciliation/:kind", "implemented-derived"],
   ["GET", "/api/admin/reports", "implemented-bounded"],
   ["GET", "/api/admin/reports/export", "implemented-audited-aggregate"],
-  ["GET", "/api/admin/pricing", "implemented-read-only"],
+  ["GET", "/api/admin/pricing", "implemented-versioned"],
+  ["PATCH", "/api/admin/pricing/:vehicleType", "implemented-super-admin-versioned"],
+  ["PATCH", "/api/admin/users/:id", "implemented-super-admin-customer-only"],
+  ["POST", "/api/admin/trips/:id/schedule", "implemented-super-admin-pre-dispatch"],
+  ["GET", "/api/admin/support-settings", "implemented"],
+  ["PATCH", "/api/admin/support-settings", "implemented-super-admin-versioned"],
+  ["GET", "/api/admin/users/:id", "implemented-audited"],
+  ["GET", "/api/admin/drivers/:id", "implemented-audited"],
   ["GET", "/api/admin/ratings", "implemented-read-only"],
   ["GET", "/api/admin/team", "implemented-super-admin-read-only"],
   ["GET", "/api/admin/support", "implemented"],
@@ -271,9 +306,9 @@ export const routeInventory = [
   ["POST", "/api/admin/safety/:id/activity", "implemented-super-admin-only"],
   ["GET", "/api/admin/payments/users/:userId", "existing"],
   ["GET", "/api/admin/payments/settings", "existing"],
-  ["POST", "/api/admin/payments/refunds", "existing"],
-  ["POST", "/api/admin/payments/adjustments", "existing"],
-  ["POST", "/api/admin/payments/accounts/:userId/freeze", "existing"],
+  ["POST", "/api/admin/payments/refunds", "implemented-evidence-and-rollout-gated"],
+  ["POST", "/api/admin/payments/adjustments", "implemented-rollout-gated"],
+  ["POST", "/api/admin/payments/accounts/:userId/freeze", "implemented-rollout-gated"],
   ["PATCH", "/api/admin/payments/settings", "existing"],
   ["POST", "/api/admin/payments/sweeps", "existing-policy-gated"],
 ] as const;
@@ -324,6 +359,7 @@ export interface DriverApplication {
   year: number | null;
   plate: string | null;
   rejectionReason: string | null;
+  serviceSettings?: DriverServiceSettings;
   documents: {
     kind: "license" | "registration" | "insurance";
     available: boolean;
@@ -338,7 +374,12 @@ export interface LiveDriver {
   vehicle: string;
   plate: string;
   courierOptIn: boolean;
+  rideOptIn?: boolean;
+  vehicleCategory?: VehicleCategory | null;
+  rideServiceStatus?: DriverServiceStatus;
+  courierServiceStatus?: DriverServiceStatus;
   activeTripId: string | null;
+  activeTripService?: ServiceType | null;
   availability: string;
   location: { latitude: number; longitude: number; at: string } | null;
 }
@@ -366,6 +407,22 @@ export interface RefundEligibility {
   refundedKobo: string;
   remainingKobo: string;
   eligible: boolean;
+  ineligibleReason?: string | null;
   destination: string;
   asOf: string;
+}
+export interface EmailRecord {
+  id:string;userId:string|null;audience:"customer"|"admin";recipient:string;template:string;subject:string;status:string;attempts:number;
+  lastError:string|null;createdAt:string;updatedAt:string;acceptedAt:string|null;deliveredAt:string|null;providerId:string|null;version:string;canRetry:boolean;
+}
+export interface EmailList {items:EmailRecord[];page:number;pageSize:number;total:number;summary:Record<string,number>;asOf:string}
+export interface EmailConfiguration {
+  enabled:boolean;ready:boolean;missing:string[];sender:string|null;replyTo:string|null;adminRecipients:string[];
+  apiKeyConfigured:boolean;webhookConfigured:boolean;logoUrl:string|null;appUrl:string|null;dashboardUrl:string|null;
+  worker:{name:string;state:string;details:string};
+}
+export interface EmailTemplatePreview {template:string;version:number;subject:string;text:string;html:string}
+export interface EmailPreferences {
+  enabled:boolean;rules:Record<string,boolean>;version:number;updatedAt:string;
+  controls:Array<{key:string;label:string;group:string;description:string}>;
 }

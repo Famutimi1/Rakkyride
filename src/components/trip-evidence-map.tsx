@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { SampledPositions, TripPosition } from "@/contracts/admin";
 import {
   loadGoogleMaps,
+  MAPS_AUTH_FAILURE,
   type GoogleMap,
   type GoogleMarker,
 } from "@/lib/google-maps";
@@ -40,6 +41,11 @@ export function TripEvidenceMap({
       : null;
   const hasEvidence = !!samples.items.length || !!live;
 
+  useEffect(() => {
+    const failed = () => setMapError("Google Maps access is unavailable. Check API activation, billing and browser-key restrictions.");
+    window.addEventListener(MAPS_AUTH_FAILURE, failed);
+    return () => window.removeEventListener(MAPS_AUTH_FAILURE, failed);
+  }, []);
   useEffect(() => {
     setClock(Date.now());
     const timer = setInterval(() => setClock(Date.now()), 5000);

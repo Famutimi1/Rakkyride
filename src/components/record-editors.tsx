@@ -162,11 +162,12 @@ export function PricingEditor({ fare }: { fare: FareSettings }) {
 export function PersonEditor({
   person,
 }: {
-  person: { id: string; name: string; active: boolean; version: string };
+  person: { id: string; name: string; active: boolean; version: string; driver?:{status:string;activeTripId?:string|null}|null };
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [name, setName] = useState(person.name),
     [active, setActive] = useState(person.active);
+  const nameLocked=person.driver?.status==='approved'||Boolean(person.driver?.activeTripId);
   return (
     <>
       <Button
@@ -193,10 +194,12 @@ export function PersonEditor({
           <FormField label="Name">
             <input
               value={name}
+              disabled={nameLocked}
               maxLength={100}
               onChange={(e) => setName(e.target.value)}
             />
           </FormField>
+          {nameLocked && <p className="muted">Reviewed driver identity cannot be changed directly. Material changes need a staff review and cannot be made during an active trip.</p>}
           <FormField label="Account status">
             <Dropdown
               aria-label="Account status"

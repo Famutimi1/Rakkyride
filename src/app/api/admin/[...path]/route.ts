@@ -1,18 +1,27 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import {readJsonRequest,RequestBodyError} from '@/lib/request-body';
 import { cookieNames, previewEnabled, upstream } from "@/lib/server";
 const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const readRules = [
+  /^emails(\/(configuration|templates|preferences))?$/i,
+  new RegExp(`^emails/${uuid}$`, "i"),
+  /^support-settings$/i,
   /^live$/i,
   new RegExp(`^trips/${uuid}/location$`, "i"),
   /^reports\/export$/i,
   new RegExp(`^operations/${uuid}$`, "i"),
+  new RegExp(`^driver-applications/${uuid}$`, "i"),
   new RegExp(
     `^driver-applications/${uuid}/documents/(license|registration|insurance)$`,
     "i",
   ),
 ];
 const mutationRules = [
+  /^emails\/preferences$/i,
+  /^emails\/test$/i,
+  new RegExp(`^emails/${uuid}/retry$`, "i"),
+  /^support-settings$/i,
   /^search$/i,
   /^(support|safety)$/i,
   new RegExp(`^(support|safety)/${uuid}/activity$`, "i"),
@@ -38,6 +47,8 @@ async function handle(
   if (!(read ? readRules : mutationRules).some((rule) => rule.test(path)))
     return json({ error: "This operation is unavailable." }, 404);
   const patch =
+    path === "emails/preferences" ||
+    path === "support-settings" ||
     path === "payments/settings" ||
     path.startsWith("pricing/") ||
     /^users\//.test(path);
@@ -75,16 +86,7 @@ async function handle(
   if (!token)
     return json({ error: "Your session expired. Sign in again." }, 401);
   try {
-    const body = read ? undefined : await request.text();
-    if (body && body.length > 16384)
-      return json({ error: "Request is too large." }, 413);
-    if (body) {
-      try {
-        JSON.parse(body);
-      } catch {
-        return json({ error: "Invalid request." }, 400);
-      }
-    }
+    const body = read ? undefined : JSON.stringify(await readJsonRequest(request));
     const response = await upstream(
       `admin/${path}${read ? request.nextUrl.search : ""}`,
       {
@@ -122,7 +124,8 @@ async function handle(
     }
     const data: unknown = await response.json();
     return json(data, response.status);
-  } catch {
+  } catch (error) {
+    if(error instanceof RequestBodyError)return json({error:error.message},error.status);
     return json(
       {
         error: inspection

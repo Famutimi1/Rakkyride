@@ -4,12 +4,15 @@ import { FormField } from "./ui/filter-toolbar";
 import { Dropdown } from "./ui/dropdown";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { LiveSnapshot } from "@/contracts/admin";
+import type { LiveSnapshot, ServiceType } from "@/contracts/admin";
 import {
   loadGoogleMaps,
+  MAPS_AUTH_FAILURE,
   type GoogleMap,
   type GoogleMarker,
 } from "@/lib/google-maps";
+import { liveServiceDrivers, showServiceMarker, driverServiceNames } from "@/lib/driver-services";
+import { DriverServiceState } from "./driver-service-state";
 import { Icon } from "./icon";
 import { Notice, StatusBadge, Timestamp } from "./primitives";
 const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_JS_KEY;
@@ -30,9 +33,17 @@ export function LiveOperations({
     [mapReady, setMapReady] = useState(false),
     [clock, setClock] = useState(Date.parse(initial.asOf)),
     [pending, setPending] = useState<LiveSnapshot | null>(null);
+  const [service,setService]=useState<ServiceType>(initial.scope.service);
+  const matchingScope=data.scope.service===service;
+  const drivers=matchingScope?liveServiceDrivers(data.drivers,service):[];
   const queue = useRef<HTMLElement>(null);
   const fresh = (at: string) =>
     clock - Date.parse(at) >= 0 && clock - Date.parse(at) < 30000;
+  useEffect(() => {
+    const failed = () => setMapError("Google Maps access is unavailable. Check API activation, billing and browser-key restrictions.");
+    window.addEventListener(MAPS_AUTH_FAILURE, failed);
+    return () => window.removeEventListener(MAPS_AUTH_FAILURE, failed);
+  }, []);
   useEffect(() => {
     setClock(Date.now());
     const timer = setInterval(() => setClock(Date.now()), 5000);
@@ -50,8 +61,9 @@ export function LiveOperations({
     request.current = controller;
     setBusy(true);
     try {
+      const requestedScope={...scope.current};
       const query = new URLSearchParams(
-        Object.entries(scope.current).map(([k, v]) => [k, String(v)]),
+        Object.entries(requestedScope).map(([k, v]) => [k, String(v)]),
       );
       const response = await fetch(`/api/admin/live?${query}`, {
         signal: controller.signal,
@@ -65,6 +77,7 @@ export function LiveOperations({
         );
       const snapshot = (await response.json()) as LiveSnapshot;
       if (controller.signal.aborted) return;
+      if(snapshot.scope.service!==requestedScope.service)throw new Error("The server returned a different service scope. Refresh after updating the backend.");
       if (queue.current?.contains(document.activeElement)) setPending(snapshot);
       else {
         setData(snapshot);
@@ -134,8 +147,8 @@ export function LiveOperations({
       markers.current.forEach((marker) => {
         marker.map = null;
       });
-      markers.current = data.drivers.flatMap((driver) => {
-        if (!driver.location) return [];
+      markers.current = (matchingScope?liveServiceDrivers(data.drivers,service):[]).flatMap((driver) => {
+        if (!driver.location||!showServiceMarker(driver,service)) return [];
         const content = document.createElement("button");
         content.type = "button";
         const stale = !fresh(driver.location.at);
@@ -166,15 +179,15 @@ export function LiveOperations({
     return () => {
       cancelled = true;
     };
-  }, [data, selected, mapError, mapReady, clock]);
+  }, [data, selected, mapError, mapReady, clock, service, matchingScope]);
   useEffect(() => {
-    const driver = data.drivers.find((d) => d.id === selected);
+    const driver = data.scope.service===service?liveServiceDrivers(data.drivers,service).find((d) => d.id === selected):undefined;
     if (follow && driver?.location && fresh(driver.location.at))
       map.current?.panTo({
         lat: driver.location.latitude,
         lng: driver.location.longitude,
       });
-  }, [data, selected, follow]);
+  }, [data, selected, follow, service]);
   function searchArea() {
     const bounds = map.current?.getBounds()?.toJSON();
     if (bounds) scope.current = { ...scope.current, ...bounds };
@@ -194,7 +207,7 @@ export function LiveOperations({
             }
           />
           <span>
-            Snapshot <Timestamp value={data.asOf} />
+            {matchingScope?<>Snapshot <Timestamp value={data.asOf} /></>:"Waiting for the selected service snapshot"}
           </span>
         </div>
         <Button
@@ -206,7 +219,7 @@ export function LiveOperations({
           {busy ? "Refreshing…" : "Refresh snapshot"}
         </Button>
       </div>
-      {pending && (
+      {pending?.scope.service===service && (
         <Button
           type="submit"
           variant="secondary"
@@ -222,13 +235,17 @@ export function LiveOperations({
         Service supply
         <Dropdown
           aria-label="Service supply"
-          defaultValue={initial.scope.service}
+          value={service}
           disabled={preview}
           onValueChange={(value) => {
-            scope.current = {
-              ...scope.current,
-              service: value as "ride" | "courier",
-            };
+            const next=value as ServiceType;
+            setService(next);
+            setSelected(null);
+            setFollow(false);
+            setPending(null);
+            markers.current.forEach(marker=>{marker.map=null;});
+            markers.current=[];
+            scope.current={...scope.current,service:next};
             void refresh();
           }}
         >
@@ -238,8 +255,7 @@ export function LiveOperations({
       </FormField>
       {error && (
         <Notice>
-          {error} Last-known records remain visible with their snapshot
-          timestamp.
+          {error} {matchingScope?"Last-known records for this service remain labeled with their snapshot timestamp.":"Records from another service are hidden."}
         </Notice>
       )}
       {data.capped && (
@@ -251,7 +267,7 @@ export function LiveOperations({
       <div className="live-grid">
         <section className="panel live-map-panel">
           <header className="panel-header">
-            <h2>Lagos fleet map</h2>
+            <h2>{driverServiceNames[service]} · Lagos supply</h2>
             <label className="follow-control">
               <input
                 type="checkbox"
@@ -293,24 +309,24 @@ export function LiveOperations({
             </div>
           )}
           <div className="map-caption">
-            <span>D · Available driver</span>
-            <span>T · Busy / on trip</span>
+            <span>D · Available for {driverServiceNames[service].toLowerCase()}</span>
+            <span>T · Active job in this service</span>
             <span>S · Stale last-known position after a failed refresh.</span>
           </div>
         </section>
         <section className="panel driver-queue" ref={queue}>
           <header className="panel-header">
             <div>
-              <h2>Driver snapshot</h2>
-              <p>{data.drivers.length} records in this bounded snapshot</p>
+              <h2>{driverServiceNames[service]} snapshot</h2>
+              <p>{drivers.length} enrolled partners in this bounded snapshot · {matchingScope?data.availableDriversInSnapshot??"Unknown":"…"} available</p>
             </div>
           </header>
-          {data.drivers.length === 0 ? (
+          {drivers.length === 0 ? (
             <div className="query-state">
               <h3>
                 {preview
                   ? "No fleet positions simulated"
-                  : "No drivers in this snapshot"}
+                  : matchingScope?"No enrolled partners in this snapshot":"Loading selected service supply"}
               </h3>
               <p>
                 {preview
@@ -319,7 +335,7 @@ export function LiveOperations({
               </p>
             </div>
           ) : (
-            data.drivers.map((driver) => (
+            drivers.map((driver) => (
               <div
                 key={driver.id}
                 className={`driver-queue-row ${selected === driver.id ? "selected" : ""}`}
@@ -341,6 +357,8 @@ export function LiveOperations({
                     }
                   />
                 </button>
+                <DriverServiceState status={service==="ride"?driver.rideServiceStatus:driver.courierServiceStatus} enabled={service==="ride"?driver.rideOptIn:driver.courierOptIn} />
+                {driver.activeTripService&&<small>Active job: {driverServiceNames[driver.activeTripService]}</small>}
                 <small>
                   {driver.location ? (
                     <Timestamp value={driver.location.at} />

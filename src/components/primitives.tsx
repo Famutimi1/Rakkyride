@@ -5,9 +5,11 @@ import { Icon } from "./icon";
 export function StatusBadge({
   status,
   service,
+  label,
 }: {
   status: string;
   service?: "ride" | "courier";
+  label?: string;
 }) {
   const success = [
     "completed",
@@ -16,6 +18,8 @@ export function StatusBadge({
     "approved",
     "settled",
     "available",
+    "reachable",
+    "delivered",
   ].includes(status);
   const danger = [
     "cancelled",
@@ -24,6 +28,11 @@ export function StatusBadge({
     "mismatch",
     "rejected",
     "reversed",
+    "unavailable",
+    "suspended",
+    "bounced",
+    "complained",
+    "suppressed",
   ].includes(status);
   const warning = [
     "pending",
@@ -32,6 +41,14 @@ export function StatusBadge({
     "searching",
     "returning",
     "stale",
+    "degraded",
+    "waiting_email",
+    "waiting_admin",
+    "blocked",
+    "queued",
+    "sending",
+    "delayed",
+    "uncertain",
   ].includes(status);
   return (
     <span
@@ -40,7 +57,7 @@ export function StatusBadge({
       <span aria-hidden="true">
         {success ? "✓" : danger ? "!" : warning ? "◷" : "•"}
       </span>
-      {statusLabel(status, service)}
+      {label ?? statusLabel(status, service)}
     </span>
   );
 }

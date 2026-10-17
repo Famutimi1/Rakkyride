@@ -839,6 +839,11 @@ tbody tr:hover {
 .button.secondary:hover {
   background: var(--surfaceMuted);
 }
+.button.danger {
+  background: var(--dangerSoft);
+  color: var(--danger);
+  border-color: var(--danger);
+}
 .filter-bar .button {
   font-size: 13px;
 }
@@ -1658,8 +1663,9 @@ textarea {
   overflow-wrap: anywhere;
 }
 .review-grid {
+  align-items:start;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(320px, .8fr) minmax(0, 1.2fr);
   gap: 24px;
 }
 .document-tabs {
@@ -2313,3 +2319,75 @@ textarea {
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+.table-cell-content pre {max-width: 360px; max-height: 280px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px;}
+.record-search { padding: 16px; }
+.data-table-scroll .table-actions {position: sticky;right:0;background:var(--surface);z-index:1;}
+@media (max-width: 600px) { .data-table-scroll .table-actions {position:static;} }
+
+/* Driver service approval and availability share the existing semantic theme. */
+.service-state { display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+.service-state small { color:var(--textMuted); display:block; }
+.driver-directory table { width:100%; min-width:800px; }
+.driver-directory td:first-child .table-cell-content { max-width:190px; }
+.service-review-options { padding:0 24px 24px; display:flex; flex-direction:column; gap:16px; min-width:0; }
+.service-review-panel .definition-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:20px; }
+.service-review-panel .definition-list>div { flex-direction:column; align-items:flex-start; gap:6px; }
+.service-review-panel .definition-list dd { text-align:left; }
+.service-review-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr)); gap:20px; }
+.service-review-item { padding:16px 0; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:12px; min-width:0; }
+.service-review-item .panel-note,.service-review-item .fine-print,.service-review-options>.panel-note { padding:0; margin:0; }
+.service-review-item h4 { margin:0; font-size:14px; }
+.service-change-list { padding-left:20px; line-height:1.6; }
+.service-review-options>.form-error { margin:0; }
+.preview-reset { margin:8px 0 0 12px; }
+.service-review-notice { padding:16px; border:1px solid var(--border); background:var(--surfaceMuted); border-radius:var(--radius-md); margin:16px 0; }
+.service-decision-actions { display:flex; flex-direction:column; gap:12px; margin-top:auto; padding-top:8px; }
+.service-decision-actions .button { width:100%; min-height:44px; white-space:normal; text-align:center; }
+.service-decision-actions small { display:block; color:var(--textMuted); margin-top:8px; line-height:1.5; }
+.action-dialog { overflow-y:auto; overscroll-behavior:contain; max-height:calc(100dvh - 32px); }
+.action-dialog .dialog-actions { position:sticky; bottom:-24px; background:var(--surface); padding:12px 0; }
+@media (max-width:1023px) {
+  .review-grid .service-review-panel { order:-1; }
+}
+@media (max-width:640px) {
+  .preview-reset { margin:12px 0 0; width:100%; }
+  .service-review-options { padding:0 16px 16px; }
+  .service-review-panel .definition-list { padding-inline:16px; }
+  .service-review-panel .panel-header { flex-wrap:wrap; gap:12px; }
+  .service-review-grid { grid-template-columns:minmax(0,1fr); }
+  .action-dialog { padding:16px; width:calc(100vw - 24px); }
+  .action-dialog .dialog-actions { bottom:-16px; }
+  .driver-directory .data-table-scroll table,
+  .driver-directory thead,
+  .driver-directory tbody { display:block; min-width:0; width:100%; }
+  .driver-directory thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  .driver-directory tbody tr { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; padding:16px; border-bottom:1px solid var(--border); }
+  .driver-directory .data-table-scroll td { min-width:0; max-width:none; height:auto; padding:0; border:0; }
+  .driver-directory td:first-child,
+  .driver-directory td:nth-child(2),
+  .driver-directory .table-actions { grid-column:1 / -1; }
+  .driver-directory td::before { content:attr(data-label); display:block; color:var(--textMuted); font-size:12px; margin-bottom:8px; }
+  .driver-directory td:first-child .table-cell-content { max-width:none; }
+  .driver-directory .table-actions .button { width:100%; }
+}
+.email-preview-shell { width: 100%; max-width: 100%; margin: 0 auto; overflow: hidden; }
+.email-preview-shell[data-width="mobile"] { max-width: 375px; }
+.email-preview-frame { display: block; width: 100%; height: 900px; border: 0; background: var(--surfaceMuted); }
+.email-text-preview { white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; font-size: 13px; line-height: 1.7; }
+.email-preferences { padding: 24px; }
+.email-preferences > p { font-size: 13px; line-height: 1.7; margin: 0 0 20px; }
+.email-control-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 24px; margin: 24px 0; }
+.email-control-groups fieldset { border: 1px solid var(--border); border-radius: 10px; padding: 8px 16px; min-width: 0; margin: 0; }
+.email-control-groups legend { padding: 0 6px; font-size: 13px; font-weight: 600; }
+.email-control { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 0; }
+.email-control + .email-control { border-top: 1px solid var(--border); }
+.email-control h3 { margin: 0 0 5px; font-size: 13px; }
+.email-control p { margin: 0; color: var(--textMuted); font-size: 12px; line-height: 1.65; }
+.email-control-master { padding: 20px; border: 1px solid var(--border); border-radius: 10px; background: var(--surfaceMuted); }
+.email-toggle { display: flex; align-items: center; flex-shrink: 0; gap: 7px; border: 0; padding: 5px; background: transparent; color: var(--text); cursor: pointer; font-size: 12px; }
+.email-toggle:disabled { cursor: default; opacity: .65; }
+.email-toggle-track { display: block; width: 36px; height: 22px; padding: 3px; border-radius: 20px; background: var(--borderStrong); }
+.email-toggle-track span { display: block; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); }
+.email-toggle[aria-checked="true"] .email-toggle-track { background: var(--primary); }
+.email-toggle[aria-checked="true"] .email-toggle-track span { transform: translateX(14px); background: var(--textInverse); }

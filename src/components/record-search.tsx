@@ -17,15 +17,17 @@ export function RecordSearch({
   preview,
   allowSafety,
   previewRecords = [],
-  onNavigate,
+  onNavigate = () => undefined,
+  initialScope = "all",
 }: {
   preview: boolean;
   allowSafety: boolean;
   previewRecords?: StaffSearchHit[];
-  onNavigate: () => void;
+  onNavigate?: () => void;
+  initialScope?: SearchScope;
 }) {
   const [query, setQuery] = useState("");
-  const [scope, setScope] = useState<SearchScope>("all");
+  const [scope, setScope] = useState<SearchScope>(initialScope);
   const [cursor, setCursor] = useState<string | null>(null);
   const [result, setResult] = useState<StaffSearchResult | null>(null);
   const [error, setError] = useState("");

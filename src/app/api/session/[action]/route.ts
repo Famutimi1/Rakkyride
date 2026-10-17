@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { cookieNames, isStaff, upstream } from "@/lib/server";
+import {readJsonRequest,RequestBodyError} from '@/lib/request-body';
 function result(body: object, status = 200) {
   return NextResponse.json(body, {
     status,
@@ -51,6 +52,7 @@ export async function POST(
     jar.delete(cookieNames.googleNonce);
   };
   try {
+    const input=await readJsonRequest(request);
     if (action === "google-challenge") {
       if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)
         return result(
@@ -68,21 +70,27 @@ export async function POST(
       return result({ nonce });
     }
     if (action === "logout") {
-      const access = jar.get(cookieNames.access)?.value,
-        refresh = jar.get(cookieNames.refresh)?.value;
+      const refresh = jar.get(cookieNames.refresh)?.value;
       try {
-        if (access && refresh)
-          await upstream("auth/logout", {
+        if (refresh) {
+          const response = await upstream("auth/logout", {
             method: "POST",
-            headers: { Authorization: `Bearer ${access}` },
             body: JSON.stringify({ refreshToken: refresh }),
           });
+          if (!response.ok) return result({
+            success: false,
+            locallySignedOut: true,
+            error: "You are signed out on this browser. Server session revocation could not be confirmed.",
+          }, 503);
+        }
+      } catch {
+        return result({ success: false, locallySignedOut: true,
+          error: "You are signed out on this browser. Server session revocation could not be confirmed." }, 503);
       } finally {
         clear();
       }
       return result({ success: true });
     }
-    const input: unknown = action === "refresh" ? {} : await request.json();
     if (!input || typeof input !== "object" || Array.isArray(input))
       return result({ error: "Invalid request." }, 400);
     let body: object;
@@ -126,6 +134,8 @@ export async function POST(
         ? "auth/google/staff"
         : action === "refresh"
           ? "auth/refresh"
+          : action === "verify"
+            ? "auth/login/staff/verify"
           : `auth/login/${action}`,
       { method: "POST", body: JSON.stringify(body) },
     );
@@ -149,9 +159,27 @@ export async function POST(
     if (action === "initiate") return result({ success: true });
     if (!tokenPair(data))
       return result({ error: "Unexpected sign-in response." }, 502);
+    const storeTokens = () => {
+      const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict" as const,
+        path: "/",
+      };
+      jar.set(cookieNames.access, data.tokens.accessToken, options);
+      jar.set(cookieNames.refresh, data.tokens.refreshToken, options);
+    };
+    // Preserve the rotated credential even if the subsequent identity fetch throws.
+    if (action === "refresh") storeTokens();
     const me = await upstream("auth/me", {
       headers: { Authorization: `Bearer ${data.tokens.accessToken}` },
     });
+    if (me.status >= 500) {
+      // Refresh already rotated the old credential. Preserve the new pair on
+      // a transient identity-read outage; admin routes still verify staff scope.
+      if (action === "refresh") storeTokens();
+      return result({ error: "The staff service is unavailable. Try again shortly." }, 503);
+    }
     const identity: unknown = me.ok ? await me.json() : null;
     if (
       !identity ||
@@ -167,16 +195,10 @@ export async function POST(
       clear();
       return result({ error: "This account does not have staff access." }, 403);
     }
-    const options = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict" as const,
-      path: "/",
-    };
-    jar.set(cookieNames.access, data.tokens.accessToken, options);
-    jar.set(cookieNames.refresh, data.tokens.refreshToken, options);
+    storeTokens();
     return result({ success: true });
-  } catch {
+  } catch (error) {
+    if(error instanceof RequestBodyError)return result({error:error.message},error.status);
     return result(
       { error: "The sign-in service is unavailable. Try again shortly." },
       503,

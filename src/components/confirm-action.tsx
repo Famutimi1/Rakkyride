@@ -5,6 +5,12 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Dialog } from "./ui/dialog";
+export interface ActionResult {
+  id?: string;
+  transactionId?: string;
+  auditId?: string;
+  [key: string]: unknown;
+}
 export function ConfirmAction({
   title,
   label,
@@ -15,6 +21,10 @@ export function ConfirmAction({
   children,
   recordPath,
   method = "POST",
+  open,
+  onOpenChange,
+  hideTrigger = false,
+  onSuccess,
 }: {
   title: string;
   label: string;
@@ -25,6 +35,10 @@ export function ConfirmAction({
   children?: ReactNode;
   recordPath?: string;
   method?: "POST" | "PATCH";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+  onSuccess?: (result: ActionResult) => void | Promise<void>;
 }) {
   const dialog = useRef<HTMLDialogElement>(null),
     operation = useRef<{
@@ -36,11 +50,19 @@ export function ConfirmAction({
     [busy, setBusy] = useState(false),
     [uncertain, setUncertain] = useState(false),
     [error, setError] = useState(""),
-    [result, setResult] = useState<{
-      id?: string;
-      transactionId?: string;
-      auditId?: string;
-    } | null>(null);
+    [result, setResult] = useState<ActionResult | null>(null),
+    [needsRefresh, setNeedsRefresh] = useState(false);
+  function begin() {
+    setReason("");
+    setError("");
+    setResult(null);
+    setNeedsRefresh(false);
+    operation.current = null;
+    dialog.current?.showModal();
+  }
+  useEffect(() => {
+    if (open) begin();
+  }, [open]);
   useEffect(() => {
     const current = dialog.current;
     const prevent = (event: Event) => {
@@ -49,16 +71,15 @@ export function ConfirmAction({
     current?.addEventListener("cancel", prevent);
     return () => current?.removeEventListener("cancel", prevent);
   }, [busy, uncertain]);
-  function finish(data: {
-    id?: string;
-    transactionId?: string;
-    auditId?: string;
-  }) {
+  async function finish(data: ActionResult) {
     setResult(data);
     setUncertain(false);
     setError("");
+    try { await onSuccess?.(data); }
+    catch (error) { setError(error instanceof Error ? error.message : "The decision was saved, but its current status could not be reloaded."); }
   }
   async function submit() {
+    if (busy) return;
     if (reason.trim().length < 5) {
       setError("Give a meaningful reason of at least five characters.");
       return;
@@ -78,14 +99,9 @@ export function ConfirmAction({
           requestKey: operation.current.requestKey,
         }),
       });
-      const data = (await response.json()) as {
-        error?: string;
-        id?: string;
-        transactionId?: string;
-        auditId?: string;
-      };
+      const data = (await response.json()) as ActionResult & { error?: string };
       if (response.ok) {
-        finish(data);
+        await finish(data);
         return;
       }
       if (response.status >= 500) {
@@ -97,6 +113,7 @@ export function ConfirmAction({
       }
       setUncertain(false);
       operation.current = null;
+      setNeedsRefresh(response.status === 409);
       setError(
         data.error?.replaceAll("_", " ") ??
           "The action was rejected. Review the latest details before trying again.",
@@ -124,7 +141,7 @@ export function ConfirmAction({
         objectId?: string;
       };
       if (response.ok && data.state === "confirmed")
-        finish({ ...data, id: data.objectId, auditId: data.id });
+        await finish({ ...data, id: data.objectId, auditId: data.id });
       else
         setError(
           "No completed record was found yet. The original request may still be running.",
@@ -139,20 +156,14 @@ export function ConfirmAction({
   }
   return (
     <>
-      <Button
+      {!hideTrigger && <Button
         type="button"
         variant="secondary"
         disabled={disabled}
-        onClick={() => {
-          setReason("");
-          setError("");
-          setResult(null);
-          operation.current = null;
-          dialog.current?.showModal();
-        }}
+        onClick={begin}
       >
         {title}
-      </Button>
+      </Button>}
       <Dialog
         dialogRef={dialog}
         className="action-dialog"
@@ -160,12 +171,14 @@ export function ConfirmAction({
         closeLabel="Close confirmation"
         closeDisabled={busy || uncertain}
         onClose={() => {
+          onOpenChange?.(false);
           if (result) router.refresh();
         }}
       >
         {result ? (
           <div role="status" className="action-result">
-            <h3>Action confirmed</h3>
+            <h3>Action confirmed by the backend</h3>
+            {error && <><p className="form-error" role="alert">{error}</p><Button disabled={busy} onClick={() => { setBusy(true); void finish(result).finally(() => setBusy(false)); }}>Reload saved status</Button></>}
             {result.transactionId && (
               <Link
                 className="text-link"
@@ -184,12 +197,12 @@ export function ConfirmAction({
             <Button
               type="button"
               variant="primary"
+              disabled={busy}
               onClick={() => {
                 dialog.current?.close();
-                router.refresh();
               }}
             >
-              Done
+              {busy ? "Reloading saved status…" : "Done"}
             </Button>
           </div>
         ) : (
@@ -213,6 +226,7 @@ export function ConfirmAction({
                 {error}
               </p>
             )}
+            {needsRefresh && <Button type="button" variant="secondary" onClick={() => { dialog.current?.close(); router.refresh(); }}>Reload latest application</Button>}
             <div className="dialog-actions">
               {uncertain && (
                 <Button
@@ -227,7 +241,7 @@ export function ConfirmAction({
               <Button
                 type="button"
                 variant="primary"
-                disabled={busy || reason.trim().length < 5}
+                disabled={busy || needsRefresh || reason.trim().length < 5}
                 onClick={() => void submit()}
               >
                 {busy
