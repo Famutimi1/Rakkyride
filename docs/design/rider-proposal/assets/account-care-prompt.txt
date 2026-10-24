@@ -1,0 +1,10 @@
+Built-in image_gen tool. Generated 2026-10-23. Final source: public/rider/rakky-account-care.png; optimized website asset: public/rider/rakky-account-care.webp.
+
+Use case: illustration-story
+Asset type: decorative website banner for Rakky Ride passenger account, notification preferences, support and trip messaging screens.
+Primary request: a beautifully refined editorial 3D paper-and-clay still life that makes a ride-hailing passenger website feel calm, trustworthy and premium.
+Subject: one white rounded smartphone with a simple green check symbol on its screen, a small forest green location pin, a cream envelope and subtle silver car key, arranged together on a pale sage curved plinth.
+Composition: wide 3:2, objects grouped centrally with generous clean space; soft sculptural rounded forms, realistic gentle shadows, no busy scenery.
+Color palette: Rakky Ride forest green #176B17, pale sage #EAF5E5, warm white and silver; restrained charcoal details.
+Lighting: soft daylight, airy white-forward polished product illustration.
+Constraints: no text, no letters, no logo, no map, no people, no watermark. Interface controls and labels will be real HTML outside the image.

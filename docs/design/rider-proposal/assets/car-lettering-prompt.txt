@@ -1,0 +1,5 @@
+Generator: built-in ImageGen tool, edit mode.
+Original: rakky-city-hero.png (preserved).
+Output: rakky-city-hero-branded.png.
+
+Use case: precise-object-edit. Input image 1 is the EDIT TARGET, not a style reference. Make exactly one localized change: add the exact words "Rakky Ride" in clean, bold, white sans-serif lettering on the visible forest-green side door panels of the car. Place the words centered on the broad green door area below the windows and handles, naturally following the car side perspective like a professional vinyl brand decal. Both words must be clearly legible, spelled exactly "Rakky Ride", with correct capitalization and a space. No icon, no slogan, no extra text. Preserve EVERYTHING else in the original image: exact same car model, body shape, white/green paint, door outlines and handles, windows, wheels, lighting, reflections, shadows, road, skyline, trees, bridge, floating map pin, background colors, camera, crop, dimensions, and overall composition. Do not redesign, reframe, recolor, move or add anything else. The only visible difference must be the white "Rakky Ride" lettering on the side of the car.

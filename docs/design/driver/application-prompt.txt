@@ -1,0 +1,9 @@
+Built-in imagegen tool. Final asset: public/driver/application.png and application.webp.
+
+Use case: product-mockup
+Asset type: decorative hero artwork for the Rakky Ride driver application and vehicle documents page.
+Primary request: a silver sedan beside a white document folder and forest-green shield with a subtle embossed check mark, no letters.
+Style: premium soft 3D product illustration with realistic silver materials and friendly rounded forms, consistent polished ride-hailing brand.
+Composition: landscape 3:2, isolated objects in the right two thirds with clean negative space around all edges; plain warm white background, soft ambient grounding shadow; readable at small size.
+Palette: forest green #176B17, sage #EAF5E5, warm white, silver and charcoal.
+Constraints: no text, no letters, no logos, no watermark, no people, no fabricated statistics, no roads or geographic map. Preserve a refined white-forward look.

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Rakky Ride · Passenger website design proposal</title>
+  <link rel="stylesheet" href="proposal.css">
+</head>
+<body>
+  <div class="review-bar" aria-label="Design review navigation">
+    <span><span class="review-dot"></span> RAKKY RIDE <span class="review-label">/ Passenger website · Concept 01</span></span>
+    <div class="review-tabs"><button data-view="home" class="selected">Dashboard</button><button data-view="welcome">Public home</button><button data-view="booking">Booking</button><button data-view="trip">Active trip</button><button data-view="notes">Design notes</button></div>
+    <span class="review-demo">Design preview · sample data</span>
+  </div>
+  <div id="website">
+    <header class="site-header">
+      <button class="brand" data-go="home" aria-label="Rakky Ride home"><img src="assets/rakky-ride-logo.png" alt=""><span>Rakky<span class="brand-light">Ride</span><small>GO YOUR WAY.</small></span></button>
+      <nav aria-label="Main navigation"><button data-go="home" class="active">Home</button><button data-go="rides">My rides</button><button data-go="wallet">Wallet</button><button data-go="safety">Safety</button><button data-go="help">Help</button></nav>
+      <div class="account-actions"><button class="location" data-modal="location"><i data-icon="pin"></i> Lagos, NG <i data-icon="down"></i></button><button class="icon-button bell" data-modal="notifications" aria-label="Notifications"><i data-icon="bell"></i><span></span></button><button class="avatar" data-modal="profile" aria-label="Amina's account">AO</button></div>
+    </header>
+    <main id="content"></main>
+    <footer class="site-footer"><span>© 2026 Rakky Ride. Every journey matters.</span><div><button data-modal="terms">Terms</button><button data-modal="privacy">Privacy</button><button data-go="help">Get help <i data-icon="external"></i></button></div></footer>
+    <nav class="mobile-nav" aria-label="Mobile navigation"><button data-go="home"><i data-icon="home"></i>Home</button><button data-go="rides"><i data-icon="car"></i>My rides</button><button data-go="wallet"><i data-icon="wallet"></i>Wallet</button><button data-go="safety"><i data-icon="shield"></i>Safety</button><button data-go="help"><i data-icon="help"></i>Help</button></nav>
+  </div>
+  <dialog id="modal"><button class="modal-close icon-button" aria-label="Close dialog"><i data-icon="close"></i></button><div id="modal-content"></div></dialog>
+  <div class="toast" role="status" aria-live="polite"></div>
+  <script src="proposal.js"></script>
+</body>
+</html>

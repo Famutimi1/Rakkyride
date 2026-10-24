@@ -1,6 +1,8 @@
 # Rakky dashboard
 
-A separate Next.js / TypeScript staff frontend at `/Users/mac/Desktop/rakkydashboard`. All permanent records, payments, authentication and Redis state belong to the existing Express backend at `/Users/mac/Desktop/ride_app/backend`. There is no second operational backend or database.
+A Next.js / TypeScript project at `/Users/mac/Desktop/rakkydashboard`, containing the passenger website at `/` and the existing staff dashboard at `/admin`. All permanent records, payments, authentication and Redis state belong to the existing Express backend at `/Users/mac/Desktop/ride_app/backend`. There is no second operational backend or database.
+
+The passenger website uses the approved design and connects to the existing backend through separate passenger session/API routes. Its `/ride` pages include OTP sign-in, booking, scheduling, courier delivery, trip history/status, wallet funding/activity, profile photos, verified phone changes, Google sign-in with phone linking, notification preferences, support requests/replies and live trip messaging. Operational pages use backend data rather than sample records. See [passenger website integration and validation](docs/passenger-website.md) for setup and current limitations.
 
 ## Run locally
 
@@ -18,7 +20,7 @@ The shared backend should run on port 4000 using its existing PostgreSQL and Red
 ## Configuration
 
 - `RAKKY_API_URL`: server-side address of the existing backend.
-- `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: public web OAuth client ID matching backend `GOOGLE_CLIENT_ID_WEB`. Authorize the dashboard origin in Google Cloud Console. See [Google staff sign-in setup](docs/google-sign-in.md).
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: public web OAuth client ID matching backend `GOOGLE_CLIENT_ID_WEB`. Authorize the website/dashboard origin in Google Cloud Console. See [Google staff sign-in setup](docs/google-sign-in.md).
 - `DASHBOARD_ORIGIN`: exact dashboard origin for session and mutation CSRF checks; use HTTPS in production.
 - `RAKKY_ENVIRONMENT`: expected operator label. The protected layout reads the backend’s configured provider key mode and application environment, and marks a label mismatch. This is configuration evidence, not a provider availability check.
 - `NEXT_PUBLIC_GOOGLE_MAPS_JS_KEY`: browser-restricted key with Maps JavaScript API enabled. Use `NEXT_PUBLIC_GOOGLE_MAP_ID` for the fleet map.

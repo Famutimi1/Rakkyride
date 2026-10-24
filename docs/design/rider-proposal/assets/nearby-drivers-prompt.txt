@@ -1,0 +1,9 @@
+Generated with the built-in imagegen tool. Source: public/rider/rakky-nearby-drivers.png; optimized website asset: public/rider/rakky-nearby-drivers.webp.
+
+Use case: product-mockup
+Asset type: small decorative illustration for Rakky Ride nearby-driver availability card, white-forward passenger booking website.
+Primary request: an elegant miniature silver-and-white passenger sedan with restrained forest-green lower body trim, a single forest-green rounded location pin standing behind it, arranged on a subtle pale sage circular plinth.
+Style: premium softly lit 3D clay-and-paper product illustration, rounded forms, clean edges, soft ambient shadow, calm and friendly.
+Composition: landscape 3:2, car centered, generous negative space, plain warm white background. Readable as a small illustration.
+Palette: forest green #176B17, sage #EAF5E5, silver and white, charcoal windows.
+Constraints: no text, no logo, no letters, no roads, no map, no scenery, no people, no watermark. This is decorative artwork only; all availability data and map markers will be real code and backend data.

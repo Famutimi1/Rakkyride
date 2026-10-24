@@ -53,7 +53,7 @@ export const MAPS_AUTH_FAILURE = "rakky:maps-auth-failure";
 let loading: Promise<MapsRuntime> | null = null;
 export function loadGoogleMaps(key: string): Promise<MapsRuntime> {
   const host = window as MapsWindow;
-  if (host.google?.maps.marker) return Promise.resolve(host.google.maps);
+  if (host.google?.maps?.marker) return Promise.resolve(host.google.maps);
   if (loading) return loading;
   loading = new Promise((resolve, reject) => {
     const script = document.createElement("script");
@@ -71,7 +71,7 @@ export function loadGoogleMaps(key: string): Promise<MapsRuntime> {
     host.__rakkyMapsReady = () => {
       if (done) return;
       window.clearTimeout(timer);
-      if (!host.google?.maps.marker) {
+      if (!host.google?.maps?.marker) {
         fail();
         return;
       }

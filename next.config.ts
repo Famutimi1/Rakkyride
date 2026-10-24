@@ -16,6 +16,14 @@ const config: NextConfig = {
           },
         ],
       },
+      {
+        source: "/",
+        headers: [{ key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" }],
+      },
+      {
+        source: "/(ride|drive)/:path*",
+        headers: [{ key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" }],
+      },
     ];
   },
 };
